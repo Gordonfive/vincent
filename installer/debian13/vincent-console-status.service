@@ -1,7 +1,8 @@
 [Unit]
 Description=Vincent appliance status console
-After=mission-control-first-boot.service
-Wants=mission-control-first-boot.service
+After=network-online.target
+Wants=network-online.target mission-control-first-boot.service
+Before=mission-control-first-boot.service
 Conflicts=getty@tty1.service
 
 [Service]
