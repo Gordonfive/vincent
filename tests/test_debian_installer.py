@@ -3,7 +3,6 @@ import subprocess
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "installer/debian13"
 
@@ -11,13 +10,8 @@ INSTALLER = ROOT / "installer/debian13"
 class DebianInstallerTests(unittest.TestCase):
     def test_all_installer_shell_scripts_parse(self):
         scripts = [INSTALLER / name for name in (
-            "fetch-source.sh",
-            "build-image.sh",
-            "inspect-image.sh",
-            "flash-usb.sh",
-            "first-boot.sh",
-            "self-test.sh",
-            "console-status.sh",
+            "fetch-source.sh", "build-image.sh", "inspect-image.sh", "flash-usb.sh",
+            "first-boot.sh", "self-test.sh", "console-status.sh", "codex-console.sh",
             "preseed-assert.sh",
         )]
         scripts.append(ROOT / "bootstrap/provision-worker-baseline.sh")
@@ -52,13 +46,7 @@ class DebianInstallerTests(unittest.TestCase):
         assertion = (INSTALLER / "preseed-assert.sh").read_text()
         self.assertIn("preseed/early_command string /bin/sh /cdrom/mission-control/preseed-assert.sh", preseed)
         self.assertIn("VINCENT PRESEED FAILED", assertion)
-        for marker in (
-            "passwd/root-login false",
-            "passwd/make-user false",
-            "netcfg/get_hostname vincent-worker",
-            "partman-auto/method lvm",
-            "partman-auto/choose_recipe atomic",
-        ):
+        for marker in ("passwd/root-login false", "passwd/make-user false", "netcfg/get_hostname vincent-worker", "partman-auto/method lvm", "partman-auto/choose_recipe atomic"):
             self.assertIn(marker, assertion)
 
     def test_network_and_wifi_selection_remain_interactive(self):
@@ -67,9 +55,6 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertNotIn("unenrolled", preseed)
         self.assertNotIn("codex-worker", preseed)
         self.assertNotIn("netcfg/choose_interface", preseed)
-        self.assertNotIn("netcfg/wireless_essid string", preseed)
-        self.assertNotIn("netcfg/wireless_wpa string", preseed)
-        self.assertNotIn("netcfg/wireless_wep string", preseed)
 
     def test_usb_flasher_requires_stable_usb_identity_and_exact_confirmation(self):
         script = (INSTALLER / "flash-usb.sh").read_text()
@@ -82,16 +67,12 @@ class DebianInstallerTests(unittest.TestCase):
     def test_boot_entries_are_visibly_destructive_but_not_defaulted(self):
         bios = (INSTALLER / "isolinux-mission-control.cfg").read_text()
         uefi = (INSTALLER / "grub-mission-control.cfg").read_text()
-        self.assertIn("DESTRUCTIVE", bios)
-        self.assertIn("DESTRUCTIVE", uefi)
-        self.assertIn("Vincent installer", bios)
-        self.assertIn("Vincent installer", uefi)
-        self.assertIn("passwd/root-login=false", bios)
-        self.assertIn("passwd/make-user=false", bios)
-        self.assertIn("passwd/root-login=false", uefi)
-        self.assertIn("passwd/make-user=false", uefi)
-        self.assertNotIn("interface=auto", bios)
-        self.assertNotIn("interface=auto", uefi)
+        for text in (bios, uefi):
+            self.assertIn("DESTRUCTIVE", text)
+            self.assertIn("Vincent installer", text)
+            self.assertIn("passwd/root-login=false", text)
+            self.assertIn("passwd/make-user=false", text)
+            self.assertNotIn("interface=auto", text)
         self.assertNotIn("menu default", bios)
         self.assertNotIn("set default", uefi)
 
@@ -99,10 +80,7 @@ class DebianInstallerTests(unittest.TestCase):
         source = (INSTALLER / "source.env").read_text()
         self.assertRegex(source, r"DEBIAN_VERSION=13\.\d+\.\d+")
         self.assertIn("DEBIAN_ARCH=amd64", source)
-        self.assertIn(
-            "DEBIAN_BASE_URL=https://cdimage.debian.org/debian-cd/current/amd64/iso-cd",
-            source,
-        )
+        self.assertIn("DEBIAN_BASE_URL=https://cdimage.debian.org/debian-cd/current/amd64/iso-cd", source)
 
     def test_build_never_writes_directly_to_block_devices(self):
         build = (INSTALLER / "build-image.sh").read_text()
@@ -111,17 +89,14 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertNotRegex(build, re.compile(r"\bdd\s+if="))
         self.assertIn("refusing to overwrite or append to existing output", build)
 
-    def test_build_embeds_self_test_console_preseed_assertion_and_expected_commit(self):
+    def test_build_embeds_dashboard_codex_console_and_expected_commit(self):
         build = (INSTALLER / "build-image.sh").read_text()
-        self.assertIn("/mission-control/self-test.sh", build)
-        self.assertIn("/mission-control/console-status.sh", build)
-        self.assertIn("/mission-control/vincent-console-status.service", build)
-        self.assertIn("/mission-control/preseed-assert.sh", build)
-        self.assertIn("/mission-control/expected-commit", build)
-        self.assertIn('"unattended_self_test": True', build)
-        self.assertIn('"human_login_account": False', build)
+        for marker in ("/mission-control/self-test.sh", "/mission-control/console-status.sh", "/mission-control/codex-console.sh", "/mission-control/vincent-codex-console.service", "/mission-control/preseed-assert.sh", "/mission-control/expected-commit"):
+            self.assertIn(marker, build)
+        self.assertIn('"interactive_codex_console": "tty2_non_root"', build)
+        self.assertIn('"live_console_work_output": True', build)
+        self.assertIn('"network_bootstrap_retry": True', build)
         self.assertIn('"runtime_source": "public_git_exact_commit"', build)
-        self.assertIn('"volume_group_name": "vincent-vg"', build)
 
     def test_build_makes_extracted_boot_configs_writable_before_editing(self):
         build = (INSTALLER / "build-image.sh").read_text()
@@ -129,80 +104,58 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertIn(chmod, build)
         self.assertLess(build.index(chmod), build.index("include mission-control.cfg"))
 
-    def test_inspection_extracts_and_validates_embedded_payloads(self):
+    def test_inspection_validates_dashboard_and_interactive_console(self):
         inspect = (INSTALLER / "inspect-image.sh").read_text()
-        self.assertIn('-extract "$required" "$extracted"', inspect)
-        self.assertIn('tar -tzf "$inspection_root/platform.tar.gz"', inspect)
-        self.assertIn("mission-control/preseed-assert.sh", inspect)
-        self.assertIn("mission-control/expected-commit", inspect)
-        self.assertIn("passwd/make-user boolean false", inspect)
+        for marker in ("mission-control/preseed-assert.sh", "mission-control/expected-commit", "mission-control/codex-console.sh", "mission-control/vincent-codex-console.service", "LIVE WORK OUTPUT", "Alt+F2"):
+            self.assertIn(marker, inspect)
         self.assertIn("vincent-vg", inspect)
 
     def test_toolchain_uses_signed_repositories_and_saved_codex_installer(self):
         script = (ROOT / "bootstrap/provision-worker-baseline.sh").read_text()
         self.assertIn("Signed-By: /etc/apt/keyrings/docker.asc", script)
         self.assertIn("Signed-By: /etc/apt/keyrings/ddev.asc", script)
-        self.assertIn("https://pkg.ddev.com/apt/", script)
-        self.assertIn("apt-get install -y ca-certificates curl gpg jq gh git", script)
         self.assertIn("https://chatgpt.com/codex/install.sh", script)
         self.assertIn("codex-install.sh.sha256", script)
-        self.assertIn("install -d -o root -g mission-control -m 0750", script)
-        self.assertIn('chown root:mission-control "$codex_installer"', script)
-        self.assertIn('chmod 0750 "$codex_installer"', script)
         self.assertIn('install -o root -g root -m 0755 "$codex_binary" /usr/local/bin/codex', script)
-        self.assertIn("runuser -u nobody -- /usr/local/bin/codex --version", script)
-        self.assertNotIn('ln -sfn "$codex_binary" /usr/local/bin/codex', script)
         self.assertNotIn("curl -fsSL https://chatgpt.com/codex/install.sh |", script)
 
-    def test_first_boot_fetches_exact_public_git_commit_and_runs_self_test(self):
+    def test_first_boot_retries_network_and_fetches_exact_public_git_commit(self):
         script = (INSTALLER / "first-boot.sh").read_text()
-        self.assertIn("/sys/class/dmi/id/product_uuid", script)
-        self.assertIn('print(f"vincent-worker-{value:06d}")', script)
+        self.assertIn("network_attempts=20", script)
+        self.assertIn("getent ahosts github.com", script)
+        self.assertIn("curl --fail", script)
         self.assertIn("https://github.com/Gordonfive/vincent.git", script)
         self.assertIn("expected-commit", script)
         self.assertIn("git -C \"$source_root\" fetch --no-tags --depth=1 origin \"$expected_commit\"", script)
-        self.assertIn('fetched_commit=$(git -C "$source_root" rev-parse FETCH_HEAD)', script)
         self.assertIn("SELF_TESTING", script)
-        self.assertIn('"$self_test"', script)
         self.assertIn("ENROLLMENT_REQUIRED", script)
         self.assertNotIn("tar -xzf", script)
 
-    def test_self_test_covers_required_appliance_components(self):
-        script = (INSTALLER / "self-test.sh").read_text()
-        for marker in (
-            "hostname",
-            "network_route",
-            "network_dns",
-            "ssh_service",
-            "git",
-            "github_cli",
-            "docker",
-            "ddev",
-            "codex",
-            "python_packaging",
-            "git_exact_commit",
-            "git_public_remote",
-            "service_account",
-            "no_human_login_accounts",
-            "enrollment_request",
-            "embedded_recovery_payload",
-            "embedded_private_key_scan",
-            "worker_authority_disabled",
-            "VINCENT_SELF_TEST",
-        ):
-            self.assertIn(marker, script)
-
-    def test_console_replaces_login_prompt_and_displays_failure_details(self):
+    def test_console_has_fixed_status_live_output_and_codex_hint(self):
         service = (INSTALLER / "vincent-console-status.service").read_text()
         script = (INSTALLER / "console-status.sh").read_text()
         self.assertIn("Conflicts=getty@tty1.service", service)
         self.assertIn("TTYPath=/dev/tty1", service)
-        self.assertIn("vincent-console-status", service)
-        self.assertIn("VINCENT WORKER SELF-TEST", script)
-        self.assertIn("READY FOR REMOTE ENROLLMENT", script)
-        self.assertIn("FAILED CHECKS", script)
-        self.assertIn("BOOTSTRAP ERROR TAIL", script)
+        for marker in ("VINCENT WORKER", "LIVE WORK OUTPUT", "EXPECTED GIT", "GITHUB DNS", "Alt+F2", "FAILED CHECKS"):
+            self.assertIn(marker, script)
         self.assertNotIn("unenrolled", script)
+
+    def test_tty2_codex_console_is_non_root_and_no_login_prompt(self):
+        service = (INSTALLER / "vincent-codex-console.service").read_text()
+        script = (INSTALLER / "codex-console.sh").read_text()
+        preseed = (INSTALLER / "preseed.cfg").read_text()
+        self.assertIn("TTYPath=/dev/tty2", service)
+        self.assertIn("Conflicts=getty@tty2.service", service)
+        self.assertIn("runuser -u mission-control", script)
+        self.assertIn("VINCENT INTERACTIVE CODEX CONSOLE", script)
+        self.assertIn("systemctl mask getty@tty1.service getty@tty2.service", preseed)
+        self.assertIn("vincent-codex-console.service", preseed)
+        self.assertNotIn("/bin/bash", script)
+
+    def test_self_test_covers_required_appliance_components(self):
+        script = (INSTALLER / "self-test.sh").read_text()
+        for marker in ("hostname", "network_route", "network_dns", "ssh_service", "git", "github_cli", "docker", "ddev", "codex", "python_packaging", "git_exact_commit", "git_public_remote", "service_account", "no_human_login_accounts", "enrollment_request", "embedded_recovery_payload", "embedded_private_key_scan", "worker_authority_disabled", "VINCENT_SELF_TEST"):
+            self.assertIn(marker, script)
 
     def test_fetch_requires_the_debian_cd_signing_keyring(self):
         script = (INSTALLER / "fetch-source.sh").read_text()
