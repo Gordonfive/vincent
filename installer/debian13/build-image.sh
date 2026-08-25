@@ -39,7 +39,10 @@ install -d "$payload_root" "$(dirname -- "$output_iso")"
 git -C "$repository_root" archive --format=tar.gz --output="$payload_root/platform.tar.gz" HEAD
 install -m 0644 "$script_root/preseed.cfg" "$payload_root/preseed.cfg"
 install -m 0755 "$script_root/first-boot.sh" "$payload_root/first-boot.sh"
+install -m 0755 "$script_root/self-test.sh" "$payload_root/self-test.sh"
+install -m 0755 "$script_root/console-status.sh" "$payload_root/console-status.sh"
 install -m 0644 "$script_root/mission-control-first-boot.service" "$payload_root/mission-control-first-boot.service"
+install -m 0644 "$script_root/vincent-console-status.service" "$payload_root/vincent-console-status.service"
 install -m 0644 "$script_root/isolinux-mission-control.cfg" "$payload_root/isolinux-mission-control.cfg"
 install -m 0644 "$script_root/grub-mission-control.cfg" "$payload_root/grub-mission-control.cfg"
 
@@ -58,7 +61,10 @@ xorriso \
     -map "$payload_root/preseed.cfg" /preseed.cfg \
     -map "$payload_root/platform.tar.gz" /mission-control/platform.tar.gz \
     -map "$payload_root/first-boot.sh" /mission-control/first-boot.sh \
+    -map "$payload_root/self-test.sh" /mission-control/self-test.sh \
+    -map "$payload_root/console-status.sh" /mission-control/console-status.sh \
     -map "$payload_root/mission-control-first-boot.service" /mission-control/mission-control-first-boot.service \
+    -map "$payload_root/vincent-console-status.service" /mission-control/vincent-console-status.service \
     -map "$payload_root/isolinux-mission-control.cfg" /isolinux/mission-control.cfg \
     -map "$work_root/menu.cfg" /isolinux/menu.cfg \
     -map "$work_root/grub.cfg" /boot/grub/grub.cfg \
@@ -82,6 +88,9 @@ data = {
     "output_iso": Path(output).name,
     "output_sha256": output_hash,
     "destructive_mode": "manual_disk_selection_and_confirmation",
+    "human_login_account": False,
+    "unattended_self_test": True,
+    "persistent_console_status": True,
     "embedded_secrets": False,
 }
 Path(manifest).write_text(json.dumps(data, sort_keys=True, indent=2) + "\n")

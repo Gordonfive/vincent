@@ -4,19 +4,16 @@ Status: PROTOTYPE — DESTRUCTIVE INSTALLATION REQUIRES MANUAL DISK SELECTION
 
 The image is built from a verified Debian 13 netinst ISO and a clean platform commit. The ISO contains no Git credential, Codex credential, administrative password, permanent worker identity, or private SSH key.
 
-Debian documents preseeding as its supported installer automation mechanism and supports loading `preseed.cfg` from remastered media. Debian netinst images are hybrid images suitable for direct USB writing. See the [Debian 13 automated-installation appendix](https://www.debian.org/releases/trixie/amd64/apb.en.html) and [Debian download page](https://www.debian.org/download).
-
 ## Safety model
 
 This prototype intentionally does not preseed a target disk or destructive confirmations.
 
 - The normal Debian installer remains the default boot path.
-- The Mission Control entry is visibly labeled `DESTRUCTIVE`.
+- The Vincent entry is visibly labeled `DESTRUCTIVE`.
 - The operator must select the installation disk.
 - Debian asks for the target disk, proposes whole-disk guided LVM with all files in one root filesystem, displays the destructive changes, and requires final confirmation.
+- No human login account or password is created. Root login remains disabled.
 - The USB flasher accepts only `/dev/disk/by-id/usb-*` removable whole disks and requires an exact device-specific confirmation string.
-
-Do not weaken these controls until the first hardware inventory and destructive-test review are complete.
 
 ## Build host prerequisites
 
@@ -24,7 +21,7 @@ Use a Debian development machine with a clean clone of the public `Gordonfive/vi
 
 ```text
 sudo apt-get update
-sudo apt-get install -y xorriso curl gpgv debian-keyring python3 git
+sudo apt-get install -y xorriso curl gpgv debian-keyring python3 python3-pip python3-setuptools git
 ```
 
 ## Fetch and verify Debian
@@ -91,31 +88,43 @@ The flasher verifies USB transport, removable status, whole-disk type, capacity,
 1. Boot the disposable workstation from the USB in UEFI mode when available.
 2. Select `Vincent installer (DESTRUCTIVE - manual disk selection)`.
 3. Select the wired interface when it has a working link. Otherwise select the Wi-Fi interface, choose an SSID from Debian's scan, and enter its password. Wi-Fi credentials are used by the installer and are not embedded in the USB image.
-4. Create the temporary administrative user and password when Debian prompts. These are not stored on the USB.
-5. Select only the verified disposable target disk.
-6. Select the intended target disk. Confirm that Debian proposes whole-disk guided LVM with the `atomic` all-files-in-one-filesystem recipe, then review and confirm destruction.
-7. Remove the USB when Debian reboots.
+4. Select only the verified disposable target disk.
+5. Confirm that Debian proposes whole-disk guided LVM with the `atomic` all-files-in-one-filesystem recipe, then review and confirm destruction.
+6. Remove the USB when Debian reboots.
 
-First boot installs the platform from the embedded Git archive, generates a new worker identity, installs Docker CE, DDEV, and the Codex CLI, verifies the toolchain, and stops at `ENROLLMENT_REQUIRED`. Docker access is root-equivalent local authority and is granted only to the locked worker service account on this disposable machine.
+No username, password, or local login is part of the Vincent install path. The installer creates only the locked service identities needed by Vincent.
 
-Codex installation follows the [official Codex CLI installation documentation](https://learn.chatgpt.com/docs/codex/cli). The downloaded official installer is saved and hashed in `/var/lib/mission-control-install/`; authentication is not embedded and remains an owner-controlled step.
+## Unattended first boot and self-test
 
-## Inspect first-boot status
+First boot installs the platform from the embedded Git archive, generates a new worker identity, installs Docker CE, DDEV, GitHub CLI, and the Codex CLI, verifies the toolchain, runs the Vincent appliance self-test, and stops without worker authority.
 
-At the new workstation console:
+Vincent automatically validates at least:
+
+- stable `vincent-worker-NNNNNN` hostname;
+- default network route and DNS;
+- SSH service;
+- Git and GitHub CLI;
+- Docker and DDEV;
+- Codex CLI;
+- Python pip/setuptools packaging support;
+- locked Vincent service account and absence of human login accounts;
+- unique enrollment request;
+- embedded source payload integrity and private-key marker scan;
+- worker service remains disabled before enrollment.
+
+The physical console is owned by `vincent-console-status.service`, not a login getty. It persistently displays the self-test result and current state. The operator is not expected to log in or run diagnostic commands.
+
+Expected successful endpoint:
 
 ```text
-sudo cat /var/lib/mission-control-install/status.json
-sudo cat /var/lib/mission-control-install/toolchain.json
-sudo cat /var/lib/mission-control/identity/enrollment-request.json
-sudo journalctl -u mission-control-first-boot.service --no-pager
-sudo cat /var/log/mission-control/bootstrap.log
+VINCENT WORKER SELF-TEST
+...
+OVERALL: PASS
+STATE:   ENROLLMENT_REQUIRED
+READY FOR REMOTE ENROLLMENT
+No local login or diagnostic commands are required.
 ```
 
-Expected state:
-
-```text
-ENROLLMENT_REQUIRED
-```
+A failure displays `OVERALL: FAIL` or `STATE: FAILED` and remains visible for photographic acceptance evidence. Detailed machine-readable evidence is retained under `/var/lib/mission-control-install/` and the bootstrap log under `/var/log/mission-control/` for later authorized remote retrieval.
 
 Do not enable `mission-control-worker.service` until fingerprint approval, repository authorization, Codex authentication, configuration replacement, and `doctor` success.

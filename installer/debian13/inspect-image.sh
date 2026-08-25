@@ -14,7 +14,10 @@ for required in \
     /preseed.cfg \
     /mission-control/platform.tar.gz \
     /mission-control/first-boot.sh \
+    /mission-control/self-test.sh \
+    /mission-control/console-status.sh \
     /mission-control/mission-control-first-boot.service \
+    /mission-control/vincent-console-status.service \
     /isolinux/mission-control.cfg; do
     extracted="$inspection_root/$(basename -- "$required")"
     xorriso -osirrox on -indev "$image" -extract "$required" "$extracted" >/dev/null 2>&1 || {
@@ -29,6 +32,9 @@ done
 
 tar -tzf "$inspection_root/platform.tar.gz" >/dev/null
 grep -F 'mission-control/first-boot.sh' "$inspection_root/preseed.cfg" >/dev/null
+grep -F 'mission-control/self-test.sh' "$inspection_root/preseed.cfg" >/dev/null
+grep -F 'mission-control/console-status.sh' "$inspection_root/preseed.cfg" >/dev/null
+grep -F 'passwd/make-user boolean false' "$inspection_root/preseed.cfg" >/dev/null
 
 if grep -a -E 'BEGIN (OPENSSH|RSA|EC) PRIVATE KEY' "$image" >/dev/null; then
     echo "private key material detected" >&2

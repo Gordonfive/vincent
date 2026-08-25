@@ -10,7 +10,15 @@ INSTALLER = ROOT / "installer/debian13"
 
 class DebianInstallerTests(unittest.TestCase):
     def test_all_installer_shell_scripts_parse(self):
-        scripts = [INSTALLER / name for name in ("fetch-source.sh", "build-image.sh", "inspect-image.sh", "flash-usb.sh", "first-boot.sh")]
+        scripts = [INSTALLER / name for name in (
+            "fetch-source.sh",
+            "build-image.sh",
+            "inspect-image.sh",
+            "flash-usb.sh",
+            "first-boot.sh",
+            "self-test.sh",
+            "console-status.sh",
+        )]
         scripts.append(ROOT / "bootstrap/provision-worker-baseline.sh")
         for path in scripts:
             result = subprocess.run(["sh", "-n", str(path)])
@@ -27,9 +35,13 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertIn("partman/confirm boolean false", preseed)
         self.assertIn("partman/confirm_nooverwrite boolean false", preseed)
 
-    def test_account_secrets_are_not_preseeded(self):
+    def test_appliance_creates_no_human_account_or_password(self):
         preseed = (INSTALLER / "preseed.cfg").read_text()
+        self.assertIn("passwd/root-login boolean false", preseed)
+        self.assertIn("passwd/make-user boolean false", preseed)
         self.assertNotRegex(preseed, r"passwd/(user-password|root-password)")
+        self.assertNotIn("passwd/username", preseed)
+        self.assertNotIn("passwd/user-fullname", preseed)
         self.assertNotIn("authorized_keys", preseed)
 
     def test_network_and_wifi_selection_remain_interactive(self):
@@ -44,10 +56,10 @@ class DebianInstallerTests(unittest.TestCase):
     def test_usb_flasher_requires_stable_usb_identity_and_exact_confirmation(self):
         script = (INSTALLER / "flash-usb.sh").read_text()
         self.assertIn("/dev/disk/by-id/usb-", script)
-        self.assertIn('ERASE:', script)
-        self.assertIn('transport', script)
-        self.assertIn('removable', script)
-        self.assertIn('cmp -n', script)
+        self.assertIn("ERASE:", script)
+        self.assertIn("transport", script)
+        self.assertIn("removable", script)
+        self.assertIn("cmp -n", script)
 
     def test_boot_entries_are_visibly_destructive_but_not_defaulted(self):
         bios = (INSTALLER / "isolinux-mission-control.cfg").read_text()
@@ -77,6 +89,14 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertNotRegex(build, re.compile(r"\bdd\s+if="))
         self.assertIn("refusing to overwrite or append to existing output", build)
 
+    def test_build_embeds_self_test_and_console_payloads(self):
+        build = (INSTALLER / "build-image.sh").read_text()
+        self.assertIn("/mission-control/self-test.sh", build)
+        self.assertIn("/mission-control/console-status.sh", build)
+        self.assertIn("/mission-control/vincent-console-status.service", build)
+        self.assertIn('"unattended_self_test": True', build)
+        self.assertIn('"human_login_account": False', build)
+
     def test_build_makes_extracted_boot_configs_writable_before_editing(self):
         build = (INSTALLER / "build-image.sh").read_text()
         chmod = 'chmod u+w "$work_root/menu.cfg" "$work_root/grub.cfg"'
@@ -88,6 +108,9 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertIn('-extract "$required" "$extracted"', inspect)
         self.assertIn('tar -tzf "$inspection_root/platform.tar.gz"', inspect)
         self.assertIn("mission-control/first-boot.sh", inspect)
+        self.assertIn("mission-control/self-test.sh", inspect)
+        self.assertIn("mission-control/console-status.sh", inspect)
+        self.assertIn("passwd/make-user boolean false", inspect)
 
     def test_toolchain_uses_signed_repositories_and_saved_codex_installer(self):
         script = (ROOT / "bootstrap/provision-worker-baseline.sh").read_text()
@@ -105,12 +128,48 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertNotIn('ln -sfn "$codex_binary" /usr/local/bin/codex', script)
         self.assertNotIn("curl -fsSL https://chatgpt.com/codex/install.sh |", script)
 
-    def test_first_boot_assigns_stable_vincent_hostname(self):
+    def test_first_boot_assigns_stable_vincent_hostname_and_runs_self_test(self):
         script = (INSTALLER / "first-boot.sh").read_text()
         self.assertIn("/sys/class/dmi/id/product_uuid", script)
         self.assertIn("/etc/machine-id", script)
         self.assertIn('print(f"vincent-worker-{value:06d}")', script)
         self.assertIn('hostnamectl set-hostname "$vincent_hostname"', script)
+        self.assertIn("SELF_TESTING", script)
+        self.assertIn('"$self_test"', script)
+        self.assertIn("ENROLLMENT_REQUIRED", script)
+
+    def test_self_test_covers_required_appliance_components(self):
+        script = (INSTALLER / "self-test.sh").read_text()
+        for marker in (
+            "hostname",
+            "network_route",
+            "network_dns",
+            "ssh_service",
+            "git",
+            "github_cli",
+            "docker",
+            "ddev",
+            "codex",
+            "python_packaging",
+            "service_account",
+            "no_human_login_accounts",
+            "enrollment_request",
+            "embedded_payload",
+            "embedded_private_key_scan",
+            "worker_authority_disabled",
+            "VINCENT_SELF_TEST",
+        ):
+            self.assertIn(marker, script)
+
+    def test_console_replaces_login_prompt_with_persistent_status(self):
+        service = (INSTALLER / "vincent-console-status.service").read_text()
+        script = (INSTALLER / "console-status.sh").read_text()
+        self.assertIn("Conflicts=getty@tty1.service", service)
+        self.assertIn("TTYPath=/dev/tty1", service)
+        self.assertIn("vincent-console-status", service)
+        self.assertIn("VINCENT WORKER SELF-TEST", script)
+        self.assertIn("READY FOR REMOTE ENROLLMENT", script)
+        self.assertIn("No local login or diagnostic commands are required.", script)
 
     def test_fetch_requires_the_debian_cd_signing_keyring(self):
         script = (INSTALLER / "fetch-source.sh").read_text()

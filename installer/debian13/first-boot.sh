@@ -5,6 +5,7 @@ log_file=/var/log/mission-control/bootstrap.log
 status_file=/var/lib/mission-control-install/status.json
 source_archive=/opt/mission-control-media/platform.tar.gz
 source_root=/opt/mission-control/source
+self_test=/usr/local/sbin/vincent-self-test
 
 machine_identity=$(cat /sys/class/dmi/id/product_uuid 2>/dev/null || cat /etc/machine-id)
 vincent_hostname=$(python3 - "$machine_identity" <<'PY'
@@ -54,7 +55,7 @@ PY
     chmod 0600 "$status_file"
 }
 
-trap 'code=$?; if [ "$code" -ne 0 ]; then write_status FAILED "bootstrap command failed"; fi' EXIT
+trap 'code=$?; if [ "$code" -ne 0 ]; then write_status FAILED "bootstrap or self-test failed; see self-test report and bootstrap log"; fi' EXIT
 write_status BOOTSTRAPPING "installing platform from verified USB payload"
 
 if [ ! -f "$source_archive" ]; then
@@ -63,6 +64,10 @@ if [ ! -f "$source_archive" ]; then
 fi
 if [ -e "$source_root" ]; then
     write_status FAILED "source directory already exists; refusing implicit reuse"
+    exit 1
+fi
+if [ ! -x "$self_test" ]; then
+    write_status FAILED "Vincent self-test executable is missing"
     exit 1
 fi
 
@@ -74,5 +79,7 @@ install -m 0644 /var/lib/mission-control/identity/enrollment-request.json \
     /var/lib/vincent/enrollment-request.json
 sh "$source_root/bootstrap/provision-worker-baseline.sh"
 
-write_status ENROLLMENT_REQUIRED "compare fingerprint, authorize repository access, authenticate Codex, then run doctor"
+write_status SELF_TESTING "running unattended Vincent appliance validation"
+"$self_test"
+write_status ENROLLMENT_REQUIRED "self-test passed; approve scoped enrollment remotely"
 systemctl disable mission-control-first-boot.service
