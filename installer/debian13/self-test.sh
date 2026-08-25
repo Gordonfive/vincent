@@ -41,16 +41,27 @@ run("ddev", ["ddev", "version"])
 run("codex", ["codex", "--version"])
 run("python_packaging", ["python3", "-c", "import pip, setuptools.build_meta"])
 
+source_root = Path("/opt/mission-control/source")
+expected_path = Path("/opt/mission-control-media/expected-commit")
+installed_path = Path("/var/lib/mission-control-install/installed-commit")
+try:
+    expected = expected_path.read_text().strip()
+    installed = installed_path.read_text().strip()
+    head = subprocess.run(["git", "-C", str(source_root), "rev-parse", "HEAD"], text=True, capture_output=True, check=True).stdout.strip()
+    remote = subprocess.run(["git", "-C", str(source_root), "remote", "get-url", "origin"], text=True, capture_output=True, check=True).stdout.strip()
+    record("git_exact_commit", bool(expected and expected == installed == head), f"expected={expected} installed={installed} head={head}")
+    record("git_public_remote", remote == "https://github.com/Gordonfive/vincent.git", remote)
+except Exception as exc:
+    record("git_exact_commit", False, repr(exc))
+    record("git_public_remote", False, repr(exc))
+
 try:
     account = pwd.getpwnam("mission-control")
     record("service_account", account.pw_shell.endswith("nologin"), account.pw_shell)
 except KeyError:
     record("service_account", False, "mission-control account missing")
 
-human_accounts = [
-    entry.pw_name for entry in pwd.getpwall()
-    if 1000 <= entry.pw_uid < 60000
-]
+human_accounts = [entry.pw_name for entry in pwd.getpwall() if 1000 <= entry.pw_uid < 60000]
 record("no_human_login_accounts", not human_accounts, ",".join(human_accounts) or "none")
 
 request_path = Path("/var/lib/mission-control/identity/enrollment-request.json")
@@ -62,12 +73,13 @@ except Exception as exc:
     record("enrollment_request", False, repr(exc))
 
 archive = Path("/opt/mission-control-media/platform.tar.gz")
-run("embedded_payload", ["tar", "-tzf", str(archive)]) if archive.is_file() else record("embedded_payload", False, "archive missing")
+run("embedded_recovery_payload", ["tar", "-tzf", str(archive)]) if archive.is_file() else record("embedded_recovery_payload", False, "archive missing")
 
 private_key_marker = re.compile(br"BEGIN (?:OPENSSH|RSA|EC) PRIVATE KEY")
 try:
     data = archive.read_bytes()
-    record("embedded_private_key_scan", private_key_marker.search(data) is None, "no private-key marker" if private_key_marker.search(data) is None else "private-key marker found")
+    found = private_key_marker.search(data)
+    record("embedded_private_key_scan", found is None, "no private-key marker" if found is None else "private-key marker found")
 except Exception as exc:
     record("embedded_private_key_scan", False, repr(exc))
 
