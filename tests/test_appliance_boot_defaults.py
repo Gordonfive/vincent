@@ -6,13 +6,18 @@ INSTALLER = ROOT / "installer/debian13"
 
 
 class ApplianceBootDefaultsTests(unittest.TestCase):
-    def test_account_creation_is_disabled_in_preseed_and_boot_entries(self):
+    def test_account_creation_is_disabled_without_triggering_debian_user_setup(self):
         preseed = (INSTALLER / "preseed.cfg").read_text()
-        self.assertIn("d-i passwd/root-login boolean false", preseed)
+        self.assertIn("d-i passwd/root-login boolean true", preseed)
+        self.assertIn("d-i passwd/root-password-crypted password !vincent-installer-no-login!", preseed)
         self.assertIn("d-i passwd/make-user boolean false", preseed)
+        self.assertIn("in-target passwd -l root", preseed)
+        self.assertNotIn("passwd/username", preseed)
+        self.assertNotIn("passwd/user-fullname", preseed)
+        self.assertNotIn("passwd/user-password", preseed)
         for name in ("grub-mission-control.cfg", "isolinux-mission-control.cfg"):
             text = (INSTALLER / name).read_text()
-            self.assertIn("passwd/root-login=false", text, name)
+            self.assertIn("passwd/root-login=true", text, name)
             self.assertIn("passwd/make-user=false", text, name)
             self.assertIn("preseed/file=/cdrom/preseed.cfg", text, name)
 
