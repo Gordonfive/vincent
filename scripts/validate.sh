@@ -6,6 +6,7 @@ cd "$repository_root"
 
 PYTHONPATH=worker python3 -m unittest discover -s tests -q
 git diff --check
+python3 scripts/check_secrets.py
 python3 scripts/check_migration_boundaries.py
 
 wheel_directory=$(mktemp -d)
