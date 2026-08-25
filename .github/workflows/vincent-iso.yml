@@ -9,36 +9,114 @@ on:
 permissions:
   contents: read
 
+env:
+  VINCENT_SOURCE_COMMIT: fc032f8df1c0abde295122a8a515e9cdcf7c7b70
+
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: Install image tools
-        run: sudo apt-get update && sudo apt-get install -y xorriso curl gpgv debian-keyring python3 git
-      - name: Build and inspect Vincent ISO
+        with:
+          ref: fc032f8df1c0abde295122a8a515e9cdcf7c7b70
+          fetch-depth: 1
+      - name: Verify exact accepted source
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
+          actual=$(git rev-parse HEAD)
+          printf 'EXPECTED_SOURCE=%s\nACTUAL_SOURCE=%s\n' "$VINCENT_SOURCE_COMMIT" "$actual"
+          test "$actual" = "$VINCENT_SOURCE_COMMIT"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Install image tools
+        run: sudo apt-get update && sudo apt-get install -y xorriso curl gpgv debian-keyring python3 git
+      - name: Build and validate exact Vincent ISO
+        shell: bash
+        run: |
+          set -u -o pipefail
           log_file="vincent-iso-build-$(date -u +%Y%m%d-%H%M%S).log"
-          {
-            installer/debian13/fetch-source.sh
+          set +e
+          (
+            set -euo pipefail
+            sh installer/debian13/fetch-source.sh
             source installer/debian13/source.env
             source_iso="installer/debian13/cache/debian-${DEBIAN_VERSION}-${DEBIAN_ARCH}-netinst.iso"
             output_iso="dist/vincent-debian-${DEBIAN_VERSION}-${DEBIAN_ARCH}.iso"
-            installer/debian13/build-image.sh "$source_iso" "$output_iso"
-            installer/debian13/inspect-image.sh "$output_iso"
+            sh installer/debian13/build-image.sh "$source_iso" "$output_iso"
+            sh installer/debian13/inspect-image.sh "$output_iso"
             (cd dist && sha256sum --check "$(basename "$output_iso").sha256")
             sha256sum "$output_iso"
-          } 2>&1 | tee "$log_file"
+
+            python3 - "$output_iso" "$VINCENT_SOURCE_COMMIT" <<'PY'
+          import hashlib, json, sys
+          from pathlib import Path
+
+          image = Path(sys.argv[1])
+          expected_commit = sys.argv[2]
+          manifest_path = Path(str(image) + ".manifest.json")
+          manifest = json.loads(manifest_path.read_text())
+          actual_hash = hashlib.sha256(image.read_bytes()).hexdigest()
+          checks = {
+              "platform_commit": manifest.get("platform_commit") == expected_commit,
+              "output_iso": manifest.get("output_iso") == image.name,
+              "output_sha256": manifest.get("output_sha256") == actual_hash,
+              "embedded_secrets": manifest.get("embedded_secrets") is False,
+              "destructive_mode": manifest.get("destructive_mode") == "manual_disk_selection_and_confirmation",
+          }
+          print("MANIFEST=" + json.dumps(manifest, sort_keys=True))
+          print("MANIFEST_CHECKS=" + json.dumps(checks, sort_keys=True))
+          if not all(checks.values()):
+              raise SystemExit("manifest validation failed")
+          PY
+
+            scan_root=$(mktemp -d)
+            trap 'rm -rf "$scan_root"' EXIT
+            xorriso -osirrox on -indev "$output_iso" -extract /mission-control/platform.tar.gz "$scan_root/platform.tar.gz" >/dev/null 2>&1
+            mkdir "$scan_root/platform"
+            tar -xzf "$scan_root/platform.tar.gz" -C "$scan_root/platform"
+
+            printf '%s\n' '--- secret and identity artifact scan ---'
+            if find "$scan_root/platform" -type f \( -name 'id_rsa' -o -name 'id_ed25519' -o -name '*.pem' -o -name '*.p12' -o -name '*.pfx' \) -print -quit | grep -q .; then
+              echo 'credential-like file detected in embedded platform payload' >&2
+              find "$scan_root/platform" -type f \( -name 'id_rsa' -o -name 'id_ed25519' -o -name '*.pem' -o -name '*.p12' -o -name '*.pfx' \) -print >&2
+              exit 20
+            fi
+            if grep -R -I -n -E -- '-----BEGIN (OPENSSH|RSA|EC|DSA|PRIVATE) PRIVATE KEY-----|github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{20,}' "$scan_root/platform"; then
+              echo 'credential material pattern detected in embedded platform payload' >&2
+              exit 21
+            fi
+            echo 'SECRET_SCAN=PASS'
+            echo 'EMBEDDED_IDENTITY_FILE_SCAN=PASS'
+
+            printf '%s\n' '--- active obsolete-name scan ---'
+            if grep -R -I -n -E -- '(GitBoy|gitboy|Gordonfive/codex-worker-platform|Gordonfive/GitBoy)' \
+                "$scan_root/platform/README.md" \
+                "$scan_root/platform/AGENTS.md" \
+                "$scan_root/platform/bootstrap" \
+                "$scan_root/platform/config" \
+                "$scan_root/platform/installer" \
+                "$scan_root/platform/worker"; then
+              echo 'active obsolete product/repository identifier detected' >&2
+              exit 22
+            fi
+            echo 'ACTIVE_OBSOLETE_NAME_SCAN=PASS'
+
+            printf '%s\n' '--- compatibility path inventory ---'
+            find "$scan_root/platform" -type f \( -iname '*gitboy*' -o -iname '*codex-worker-platform*' \) -print | sort || true
+            echo 'COMPATIBILITY_PATH_INVENTORY=RECORDED'
+
+            printf 'PAYLOAD_FILE_COUNT=%s\n' "$(tar -tzf "$scan_root/platform.tar.gz" | wc -l)"
+            echo 'PAYLOAD_INSPECTION=PASS'
+          ) 2>&1 | tee "$log_file"
           status=${PIPESTATUS[0]}
+          set -e
           printf '\nBUILD_STATUS=%s\nLOG_FILE=%s\n' "$status" "$log_file"
           exit "$status"
       - name: Upload verified image and evidence
         uses: actions/upload-artifact@v4
         with:
-          name: vincent-debian-installer-${{ github.sha }}
+          name: vincent-debian-installer-fc032f8
           path: |
             dist/vincent-*.iso
             dist/vincent-*.iso.sha256
