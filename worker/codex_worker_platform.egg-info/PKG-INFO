@@ -1,5 +1,0 @@
-Metadata-Version: 2.4
-Name: codex-worker-platform
-Version: 0.1.0
-Summary: Protocol core for reproducible Codex development workers
-Requires-Python: >=3.11

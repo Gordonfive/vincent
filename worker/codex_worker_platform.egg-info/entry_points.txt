@@ -1,3 +1,0 @@
-[console_scripts]
-gitboy = mission_control.gitboy_cli:main
-mission-control-worker = mission_control.cli:main
