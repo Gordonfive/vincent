@@ -8,6 +8,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+SELF = pathlib.Path(__file__).resolve()
 
 ACTIVE_ROOTS = [
     ROOT / ".github",
@@ -50,6 +51,8 @@ def text_files(paths: list[pathlib.Path]):
 def check_obsolete_names() -> list[str]:
     failures: list[str] = []
     for path in text_files(ACTIVE_ROOTS + ACTIVE_FILES):
+        if path.resolve() == SELF:
+            continue
         try:
             data = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
