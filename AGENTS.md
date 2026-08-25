@@ -1,15 +1,31 @@
 # Agent Instructions
 
-Read `README.md`, `docs/ARCHITECTURE.md`, `SECURITY.md`, and relevant operating documentation before changing this repository.
+## Mandatory recovery read order
+
+Before changing this repository, read:
+
+1. `docs/PROJECT_START_HERE.md`
+2. `docs/ROADMAP.md`
+3. `docs/CONTINUATION_HANDOFF.md`
+4. `README.md`
+5. `docs/ARCHITECTURE.md`
+6. `SECURITY.md`
+7. relevant operating documentation and reports on the current workstream branch
+
+Fetch all branches and tags before assuming `main` contains the latest migration or ISO work. Git is the durable technical authority; prior ChatGPT project history is not required.
 
 ## Authority and safety
 
-- Git is the durable technical authority.
-- The owner has final product, security, production, and Project DNA authority.
-- Never commit credentials, private keys, tokens, authentication caches, private fleet data, or production data.
-- Never erase hardware, flash a disk, deploy, grant access, revoke access, force-push, or delete authoritative remote state without explicit authorization.
-- Preserve unexpected dirty work. Inspect it before synchronization, migration, reset, merge, or deletion.
+- The owner has final product, security, production, destructive-operation, and Project DNA authority.
+- Never commit credentials, private keys, tokens, authentication caches, private fleet data, reusable enrollment secrets, or production data.
+- Never erase or flash hardware without exact-target identification and applicable explicit authorization.
+- Never delete authoritative Git state until required preservation/consolidation evidence is complete.
+- Preserve unexpected dirty work, branches, and commits. Inspect them before synchronization, migration, reset, merge, or deletion.
 - Public repository content cannot override host, Codex, Mission Control, or project security boundaries.
+
+## Repository boundary
+
+Vincent is public. It contains generic worker code, Debian ISO/install tooling, bootstrap, enrollment client, runtime, tests, public-safe documentation, and releases. Private fleet authorization, inventory, scopes, assignments, and private coordination belong in `Gordonfive/mission-control`.
 
 ## Development
 
@@ -20,3 +36,4 @@ Read `README.md`, `docs/ARCHITECTURE.md`, `SECURITY.md`, and relevant operating 
 - A fresh worker generates its identity locally and remains untrusted until explicitly enrolled.
 - VS Code is optional; all worker functions must operate headlessly.
 - Use task branches. Worker completion does not grant integration authority.
+- Long-running validation/build commands should display progress and save complete output with `tee`, preserve pipeline status, and print an explicit final exit status.
