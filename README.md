@@ -1,41 +1,32 @@
 # Vincent
 
-**Verified Intelligent Node for Codex Execution, Networking, and Tasks**
+Vincent is Linux-first infrastructure for reproducible, disposable Codex development workers. Private fleet coordination belongs in the separate Mission Control control plane.
 
-Vincent is the public, Linux-first worker platform for reproducible Codex development machines. It provides the Debian installer, first-boot bootstrap, enrollment client, worker runtime, health reporting, and optional VS Code workspace defaults.
+## Current phase
 
-Vincent does not contain private fleet configuration, project authority, permanent credentials, or production access. Those belong to a private Mission Control repository and the assigned project repository.
+**M1 — first disposable worker implementation.** The M0 architecture was accepted at `8ed265b05cb9549f2deed43ed8a4612150a496fe`. Protocol, claiming, recovery, isolation, validation, publication, enrollment, and readiness components are under executable test. No physical worker provisioning, disk erasure, production access, or autonomous deployment has occurred.
 
-## Repository boundary
+Current validation:
 
-This repository owns:
+```text
+PYTHONPATH=worker python3 -m unittest discover -s tests -q
+```
 
-- reproducible Debian 13 ISO and installer source;
-- the `vincent` command and first-boot experience;
-- generation of a unique worker identity and enrollment request;
-- generic Codex, Git, service, logging, reporting, and health components;
-- optional VS Code/VSCodium defaults;
-- tests, public documentation, checksums, and release artifacts.
+The staged installer does not start a worker or grant credentials. See [`docs/operations/INSTALL_AND_ENROLL.md`](docs/operations/INSTALL_AND_ENROLL.md).
 
-This repository must never contain:
+The repository-only M1 implementation is ready for disposable-host verification. See [`docs/operations/M1_DEPLOYMENT_GATE.md`](docs/operations/M1_DEPLOYMENT_GATE.md).
 
-- private keys, passwords, access tokens, or authentication caches;
-- owner or fleet credentials;
-- private infrastructure configuration;
-- project-specific operating instructions;
-- permanent worker identities;
-- unrestricted or shared fleet credentials.
+The Debian 13 USB prototype builder is documented in [`docs/operations/BUILD_AND_FLASH_USB.md`](docs/operations/BUILD_AND_FLASH_USB.md). It retains manual target-disk selection and confirmation during destructive testing.
 
-## Authority chain
+Start with:
 
-1. Vincent's built-in safety boundaries.
-2. Private Mission Control fleet policy.
-3. The assigned project's `AGENTS.md` and Project DNA.
-4. The bounded task packet.
-5. Interactive operator direction.
+1. [`docs/PROJECT_START_HERE.md`](docs/PROJECT_START_HERE.md)
+2. [`docs/project-dna/PROJECT_DNA.md`](docs/project-dna/PROJECT_DNA.md)
+3. [`docs/architecture/SYSTEM_ARCHITECTURE.md`](docs/architecture/SYSTEM_ARCHITECTURE.md)
+4. [`docs/ROADMAP.md`](docs/ROADMAP.md)
 
-Lower layers may add specificity but cannot weaken higher-level security restrictions.
+The original specification is preserved under [`docs/specification/`](docs/specification/README.md).
 
-## Migration
+## Governing rule
 
-Vincent replaces the public GitBoy name. The implementation and ISO work currently preserved in `Gordonfive/codex-worker-platform` will be migrated here with history and validation evidence. `Gordonfive/GitBoy` remains a legacy public bootstrap repository until migration is verified.
+> Git restores the work. Project DNA restores the intent. Mission Control restores the operation.

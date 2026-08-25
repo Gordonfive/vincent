@@ -1,0 +1,18 @@
+[worker]
+id = "worker-example-01"
+poll_seconds = 60
+capabilities = ["git", "python"]
+
+[paths]
+state_file = "/var/lib/mission-control/worker-state.json"
+workspace_root = "/srv/codex/worktrees"
+identity_file = "/var/lib/mission-control/identity/identity.json"
+
+[coordination]
+checkout = "/srv/codex/platform"
+branch = "main"
+tasks_path = "coordination/tasks"
+
+[git]
+author_name = "Mission Control Worker"
+author_email = "worker@localhost.invalid"
