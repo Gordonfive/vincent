@@ -1,0 +1,59 @@
+# Vincent migration verification
+
+## Provenance
+
+- Legacy source repository: `Gordonfive/codex-worker-platform`
+- Legacy checkpoint branch: `checkpoint/vincent-migration-20260825`
+- Legacy checkpoint commit: `5521b3fc1fd273ffc71e47c344d6bb9083cfdb3f`
+- Legacy implementation/ISO commit: `8a06965f610ceb6a4a7becfdfaae0ce528a7394e`
+- Vincent base commit: `c6c160e5c7776752370a424852a9be9f95ac7a23`
+- Vincent preservation branch: `migration/codex-worker-platform`
+- Vincent preservation commit: `c981a5be667649d282c708763d67dcb47f7b28c9`
+- Vincent integration branch: `migration/integrate-worker-platform`
+- Vincent integration commit before this verification update: `e6b45e7a6daf801b1aaf777b909d4c580af257c6`
+- GitBoy source commit: `191f21a30ddf94d6181cbfbee1206c3fc5029c66`
+- Vincent GitBoy preservation branch: `migration/GitBoy`
+- Vincent GitBoy preservation commit: `5f7a90ed81c2dd5b8dd177c7adbd1cb327b35e9a`
+
+## Migration boundary
+
+The public tree contains the generic installer, ISO builder, bootstrap, enrollment client, worker runtime, health, logging, reporting, tests, and documentation. It contains no fleet inventory, assignments, private policy, project instructions, or credentials.
+
+First boot creates a fresh local Ed25519 identity and enrollment request. The `vincent` command reads only public bootstrap instructions before enrollment. It does not authenticate to GitHub, publish to a public branch, or attempt private-repository access. Private access requires a matching local authorization object containing explicit repository scopes.
+
+VS Code/VSCodium remains optional; the implementation and validation are headless.
+
+## Legacy-deletion gate
+
+Native Git history transfer completed on 2026-08-25 and was independently verified by exact source/destination ref equality:
+
+- `codex-worker-platform` main `0f6e93bb8cccc26edf8887eb50641ae0fe1495a2` → `legacy/codex-worker-platform/main`
+- `codex-worker-platform` checkpoint `5521b3fc1fd273ffc71e47c344d6bb9083cfdb3f` → `legacy/codex-worker-platform/checkpoint/vincent-migration-20260825`
+- `GitBoy` main `191f21a30ddf94d6181cbfbee1206c3fc5029c66` → `legacy/GitBoy/main`
+
+Migration evidence: `vincent-history-migration-20260825T175936Z.log`, with `HISTORY_MIGRATION_STATUS=PASS` and both repositories marked `VERIFIED_REPOSITORY`.
+
+All source branch tips and their reachable native commit DAGs now exist in Vincent. Legacy-repository deletion remains prohibited until a successful Vincent ISO build is accepted by the owner.
+
+## Validation
+
+- Python unit suite: 112 tests passed.
+- Installer shell parsing: passed.
+- Public-tree credential-pattern scan: passed.
+- Active documentation public/private boundary scan: passed.
+- User-facing command: `vincent`.
+- Stable hostname format: `vincent-worker-NNNNNN`.
+- ISO output format: `vincent-debian-<version>-<architecture>.iso`.
+
+The prior GitBoy ISO remains preserved as historical evidence. It is not a Vincent release artifact. A fresh Vincent ISO must be built from the pushed migration commit on the external Debian build host, because this scratch environment does not contain the verified Debian source ISO or `xorriso`.
+
+The legacy GitBoy public bootstrap policy is represented by Vincent's `bootstrap/instructions.json`, public security boundary, and `vincent` enrollment command. GitBoy remains online only for old links and provenance until the post-migration Vincent ISO is proven and the owner separately authorizes legacy-repository deletion.
+
+## Deliberately retained compatibility identifiers
+
+- The Python package and systemd service continue to use the internal `mission_control` / `mission-control-worker` names. Renaming these stateful paths and service identifiers in the same migration would add avoidable recovery risk. They are implementation identifiers, not the public product name or the private fleet repository contents.
+- `docs/reports/DEBIAN_USB_PROTOTYPE.md` retains GitBoy names because it is immutable historical physical-test evidence.
+- Original specification text under `docs/specification/` is preserved as historical source material.
+- Historical source/checkpoint reports retain legacy repository names where provenance requires them.
+
+No other active user-facing GitBoy identifier is intentionally retained.
