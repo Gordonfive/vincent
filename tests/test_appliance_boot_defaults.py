@@ -18,9 +18,10 @@ class ApplianceBootDefaultsTests(unittest.TestCase):
 
     def test_partitioning_defaults_to_guided_whole_disk_lvm_atomic(self):
         preseed = (INSTALLER / "preseed.cfg").read_text()
-        self.assertIn("partman-auto/init_automatically_partition select Guided - use entire disk", preseed)
+        self.assertIn("partman-auto/init_automatically_partition select 60some_device_lvm__________lvm", preseed)
         self.assertIn("partman-auto/method string lvm", preseed)
         self.assertIn("partman-auto-lvm/guided_size string max", preseed)
+        self.assertIn("partman-auto-lvm/new_vg_name string vincent-vg", preseed)
         self.assertIn("partman-auto/choose_recipe select atomic", preseed)
         self.assertNotIn("partman-auto/disk", preseed)
         self.assertIn("partman/confirm_write_new_label boolean false", preseed)
