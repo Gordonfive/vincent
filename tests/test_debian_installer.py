@@ -18,6 +18,7 @@ class DebianInstallerTests(unittest.TestCase):
             "first-boot.sh",
             "self-test.sh",
             "console-status.sh",
+            "preseed-assert.sh",
         )]
         scripts.append(ROOT / "bootstrap/provision-worker-baseline.sh")
         for path in scripts:
@@ -28,9 +29,10 @@ class DebianInstallerTests(unittest.TestCase):
         preseed = (INSTALLER / "preseed.cfg").read_text()
         self.assertNotIn("partman-auto/disk", preseed)
         self.assertNotIn("biggest_free", preseed)
-        self.assertIn("partman-auto/init_automatically_partition select Guided - use entire disk", preseed)
+        self.assertIn("partman-auto/init_automatically_partition select 60some_device_lvm__________lvm", preseed)
         self.assertIn("partman-auto/method string lvm", preseed)
         self.assertIn("partman-auto-lvm/guided_size string max", preseed)
+        self.assertIn("partman-auto-lvm/new_vg_name string vincent-vg", preseed)
         self.assertIn("partman-auto/choose_recipe select atomic", preseed)
         self.assertIn("partman/confirm_write_new_label boolean false", preseed)
         self.assertIn("partman/confirm boolean false", preseed)
@@ -44,6 +46,20 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertNotIn("passwd/username", preseed)
         self.assertNotIn("passwd/user-fullname", preseed)
         self.assertNotIn("authorized_keys", preseed)
+
+    def test_preseed_fails_closed_instead_of_interactive_fallback(self):
+        preseed = (INSTALLER / "preseed.cfg").read_text()
+        assertion = (INSTALLER / "preseed-assert.sh").read_text()
+        self.assertIn("preseed/early_command string /bin/sh /cdrom/mission-control/preseed-assert.sh", preseed)
+        self.assertIn("VINCENT PRESEED FAILED", assertion)
+        for marker in (
+            "passwd/root-login false",
+            "passwd/make-user false",
+            "netcfg/get_hostname vincent-worker",
+            "partman-auto/method lvm",
+            "partman-auto/choose_recipe atomic",
+        ):
+            self.assertIn(marker, assertion)
 
     def test_network_and_wifi_selection_remain_interactive(self):
         preseed = (INSTALLER / "preseed.cfg").read_text()
@@ -95,13 +111,17 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertNotRegex(build, re.compile(r"\bdd\s+if="))
         self.assertIn("refusing to overwrite or append to existing output", build)
 
-    def test_build_embeds_self_test_and_console_payloads(self):
+    def test_build_embeds_self_test_console_preseed_assertion_and_expected_commit(self):
         build = (INSTALLER / "build-image.sh").read_text()
         self.assertIn("/mission-control/self-test.sh", build)
         self.assertIn("/mission-control/console-status.sh", build)
         self.assertIn("/mission-control/vincent-console-status.service", build)
+        self.assertIn("/mission-control/preseed-assert.sh", build)
+        self.assertIn("/mission-control/expected-commit", build)
         self.assertIn('"unattended_self_test": True', build)
         self.assertIn('"human_login_account": False', build)
+        self.assertIn('"runtime_source": "public_git_exact_commit"', build)
+        self.assertIn('"volume_group_name": "vincent-vg"', build)
 
     def test_build_makes_extracted_boot_configs_writable_before_editing(self):
         build = (INSTALLER / "build-image.sh").read_text()
@@ -113,10 +133,10 @@ class DebianInstallerTests(unittest.TestCase):
         inspect = (INSTALLER / "inspect-image.sh").read_text()
         self.assertIn('-extract "$required" "$extracted"', inspect)
         self.assertIn('tar -tzf "$inspection_root/platform.tar.gz"', inspect)
-        self.assertIn("mission-control/first-boot.sh", inspect)
-        self.assertIn("mission-control/self-test.sh", inspect)
-        self.assertIn("mission-control/console-status.sh", inspect)
+        self.assertIn("mission-control/preseed-assert.sh", inspect)
+        self.assertIn("mission-control/expected-commit", inspect)
         self.assertIn("passwd/make-user boolean false", inspect)
+        self.assertIn("vincent-vg", inspect)
 
     def test_toolchain_uses_signed_repositories_and_saved_codex_installer(self):
         script = (ROOT / "bootstrap/provision-worker-baseline.sh").read_text()
@@ -134,15 +154,18 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertNotIn('ln -sfn "$codex_binary" /usr/local/bin/codex', script)
         self.assertNotIn("curl -fsSL https://chatgpt.com/codex/install.sh |", script)
 
-    def test_first_boot_assigns_stable_vincent_hostname_and_runs_self_test(self):
+    def test_first_boot_fetches_exact_public_git_commit_and_runs_self_test(self):
         script = (INSTALLER / "first-boot.sh").read_text()
         self.assertIn("/sys/class/dmi/id/product_uuid", script)
-        self.assertIn("/etc/machine-id", script)
         self.assertIn('print(f"vincent-worker-{value:06d}")', script)
-        self.assertIn('hostnamectl set-hostname "$vincent_hostname"', script)
+        self.assertIn("https://github.com/Gordonfive/vincent.git", script)
+        self.assertIn("expected-commit", script)
+        self.assertIn("git -C \"$source_root\" fetch --no-tags --depth=1 origin \"$expected_commit\"", script)
+        self.assertIn('fetched_commit=$(git -C "$source_root" rev-parse FETCH_HEAD)', script)
         self.assertIn("SELF_TESTING", script)
         self.assertIn('"$self_test"', script)
         self.assertIn("ENROLLMENT_REQUIRED", script)
+        self.assertNotIn("tar -xzf", script)
 
     def test_self_test_covers_required_appliance_components(self):
         script = (INSTALLER / "self-test.sh").read_text()
@@ -157,17 +180,19 @@ class DebianInstallerTests(unittest.TestCase):
             "ddev",
             "codex",
             "python_packaging",
+            "git_exact_commit",
+            "git_public_remote",
             "service_account",
             "no_human_login_accounts",
             "enrollment_request",
-            "embedded_payload",
+            "embedded_recovery_payload",
             "embedded_private_key_scan",
             "worker_authority_disabled",
             "VINCENT_SELF_TEST",
         ):
             self.assertIn(marker, script)
 
-    def test_console_replaces_login_prompt_with_persistent_status(self):
+    def test_console_replaces_login_prompt_and_displays_failure_details(self):
         service = (INSTALLER / "vincent-console-status.service").read_text()
         script = (INSTALLER / "console-status.sh").read_text()
         self.assertIn("Conflicts=getty@tty1.service", service)
@@ -175,7 +200,9 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertIn("vincent-console-status", service)
         self.assertIn("VINCENT WORKER SELF-TEST", script)
         self.assertIn("READY FOR REMOTE ENROLLMENT", script)
-        self.assertIn("No local login or diagnostic commands are required.", script)
+        self.assertIn("FAILED CHECKS", script)
+        self.assertIn("BOOTSTRAP ERROR TAIL", script)
+        self.assertNotIn("unenrolled", script)
 
     def test_fetch_requires_the_debian_cd_signing_keyring(self):
         script = (INSTALLER / "fetch-source.sh").read_text()
