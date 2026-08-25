@@ -30,15 +30,4 @@ check netcfg/get_hostname vincent-worker
 check partman-auto/method lvm
 check partman-auto/choose_recipe atomic
 
-# Ensure the values remain marked as already answered.
-for key in \
-    passwd/root-login \
-    passwd/make-user \
-    netcfg/get_hostname \
-    partman-auto/method \
-    partman-auto/choose_recipe; do
-    debconf-set "$key" "$(debconf-get "$key")"
-    db_fset "$key" seen true 2>/dev/null || true
-done
-
 exit 0
