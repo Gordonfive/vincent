@@ -23,6 +23,10 @@ First boot creates a fresh local Ed25519 identity and enrollment request. The `v
 
 VS Code/VSCodium remains optional; the implementation and validation are headless.
 
+## Legacy-deletion gate
+
+The Vincent preservation branches contain complete source snapshots and exact source-commit provenance. They do not yet contain the legacy repositories' complete native commit DAGs because this migration runtime could write GitHub objects but could not authenticate a Git mirror transfer. Before either legacy repository is deleted, perform and verify a mirror-history import (or preserve verified Git bundles in Vincent). Deletion remains prohibited until that evidence and a successful Vincent ISO build are both accepted by the owner.
+
 ## Validation
 
 - Python unit suite: 112 tests passed.
