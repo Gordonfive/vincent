@@ -4,13 +4,14 @@ set -eu
 status_file=/var/lib/mission-control-install/status.json
 report_file=/var/lib/mission-control-install/self-test.json
 enrollment_file=/var/lib/mission-control/identity/enrollment-request.json
+log_file=/var/log/mission-control/bootstrap.log
 
 render() {
-    python3 - "$status_file" "$report_file" "$enrollment_file" <<'PY'
+    python3 - "$status_file" "$report_file" "$enrollment_file" "$log_file" <<'PY'
 import json, sys
 from pathlib import Path
 
-status_path, report_path, enrollment_path = map(Path, sys.argv[1:])
+status_path, report_path, enrollment_path, log_path = map(Path, sys.argv[1:])
 status = {}
 report = {}
 enrollment = {}
@@ -21,16 +22,18 @@ for path, target in ((status_path, status), (report_path, report), (enrollment_p
         pass
 
 state = status.get("state", "BOOTSTRAPPING")
-hostname = status.get("hostname", report.get("hostname", "vincent-worker-unenrolled"))
+hostname = status.get("hostname", report.get("hostname", "vincent-worker"))
 overall = report.get("overall", "PENDING")
 fingerprint = enrollment.get("fingerprint", "pending")
 worker_id = enrollment.get("worker_id", "pending")
+checks = report.get("checks", [])
+failed = [item for item in checks if not item.get("ok")]
 
 print("\033[2J\033[H", end="")
 print("VINCENT WORKER SELF-TEST")
 print("========================")
 print()
-for item in report.get("checks", []):
+for item in checks:
     result = "PASS" if item.get("ok") else "FAIL"
     print(f"{item.get('name', 'unknown'):<28} {result}")
 print()
@@ -47,7 +50,24 @@ if state == "ENROLLMENT_REQUIRED" and overall == "PASS":
     print("No local login or diagnostic commands are required.")
 elif state == "FAILED" or overall == "FAIL":
     print("INSTALLATION FAILED SELF-TEST")
-    print("Photograph this screen; detailed logs are stored locally.")
+    if failed:
+        print()
+        print("FAILED CHECKS:")
+        for item in failed[:8]:
+            print(f"- {item.get('name', 'unknown')}: {item.get('detail', '')[:120]}")
+    else:
+        try:
+            lines = log_path.read_text(errors="replace").splitlines()
+            tail = [line for line in lines[-8:] if line.strip()]
+        except Exception:
+            tail = []
+        if tail:
+            print()
+            print("BOOTSTRAP ERROR TAIL:")
+            for line in tail:
+                print(line[:150])
+    print()
+    print("Photograph this screen; no local login is required.")
 else:
     print("Vincent is provisioning and testing itself. No login is required.")
 PY
@@ -55,5 +75,5 @@ PY
 
 while :; do
     render
-    sleep 15
+    sleep 10
 done
