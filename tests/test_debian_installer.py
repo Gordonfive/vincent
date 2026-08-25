@@ -32,11 +32,13 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertIn("partman/confirm boolean false", preseed)
         self.assertIn("partman/confirm_nooverwrite boolean false", preseed)
 
-    def test_appliance_creates_no_human_account_or_password(self):
+    def test_appliance_creates_no_human_account_or_usable_password(self):
         preseed = (INSTALLER / "preseed.cfg").read_text()
-        self.assertIn("passwd/root-login boolean false", preseed)
+        self.assertIn("passwd/root-login boolean true", preseed)
+        self.assertIn("passwd/root-password-crypted password !vincent-installer-no-login!", preseed)
         self.assertIn("passwd/make-user boolean false", preseed)
-        self.assertNotRegex(preseed, r"passwd/(user-password|root-password)")
+        self.assertIn("in-target passwd -l root", preseed)
+        self.assertNotIn("passwd/user-password", preseed)
         self.assertNotIn("passwd/username", preseed)
         self.assertNotIn("passwd/user-fullname", preseed)
         self.assertNotIn("authorized_keys", preseed)
@@ -46,7 +48,14 @@ class DebianInstallerTests(unittest.TestCase):
         assertion = (INSTALLER / "preseed-assert.sh").read_text()
         self.assertIn("preseed/early_command string /bin/sh /cdrom/mission-control/preseed-assert.sh", preseed)
         self.assertIn("VINCENT PRESEED FAILED", assertion)
-        for marker in ("passwd/root-login false", "passwd/make-user false", "netcfg/get_hostname vincent-worker", "partman-auto/method lvm", "partman-auto/choose_recipe atomic"):
+        for marker in (
+            "passwd/root-login true",
+            "passwd/root-password-crypted '!vincent-installer-no-login!'",
+            "passwd/make-user false",
+            "netcfg/get_hostname vincent-worker",
+            "partman-auto/method lvm",
+            "partman-auto/choose_recipe atomic",
+        ):
             self.assertIn(marker, assertion)
 
     def test_network_and_wifi_selection_remain_interactive(self):
@@ -70,7 +79,7 @@ class DebianInstallerTests(unittest.TestCase):
         for text in (bios, uefi):
             self.assertIn("DESTRUCTIVE", text)
             self.assertIn("Vincent installer", text)
-            self.assertIn("passwd/root-login=false", text)
+            self.assertIn("passwd/root-login=true", text)
             self.assertIn("passwd/make-user=false", text)
             self.assertNotIn("interface=auto", text)
         self.assertNotIn("menu default", bios)
@@ -154,7 +163,7 @@ class DebianInstallerTests(unittest.TestCase):
 
     def test_self_test_covers_required_appliance_components(self):
         script = (INSTALLER / "self-test.sh").read_text()
-        for marker in ("hostname", "network_route", "network_dns", "ssh_service", "git", "github_cli", "docker", "ddev", "codex", "python_packaging", "git_exact_commit", "git_public_remote", "service_account", "no_human_login_accounts", "enrollment_request", "embedded_recovery_payload", "embedded_private_key_scan", "worker_authority_disabled", "VINCENT_SELF_TEST"):
+        for marker in ("hostname", "network_route", "network_dns", "ssh_service", "git", "github_cli", "docker", "ddev", "codex", "python_packaging", "git_exact_commit", "git_public_remote", "service_account", "no_human_login_accounts", "root_password_locked", "enrollment_request", "embedded_recovery_payload", "embedded_private_key_scan", "worker_authority_disabled", "VINCENT_SELF_TEST"):
             self.assertIn(marker, script)
 
     def test_fetch_requires_the_debian_cd_signing_keyring(self):
