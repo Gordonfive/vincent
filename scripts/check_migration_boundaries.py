@@ -10,33 +10,14 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SELF = pathlib.Path(__file__).resolve()
 
-ACTIVE_ROOTS = [
-    ROOT / ".github",
-    ROOT / "bootstrap",
-    ROOT / "config",
-    ROOT / "installer",
-    ROOT / "scripts",
-    ROOT / "tests",
-    ROOT / "worker",
-]
+ACTIVE_ROOTS = [ROOT / ".github", ROOT / "bootstrap", ROOT / "config", ROOT / "installer", ROOT / "scripts", ROOT / "tests", ROOT / "worker"]
 ACTIVE_FILES = [ROOT / "pyproject.toml"]
 OBSOLETE = ("GitBoy", "gitboy", "Gordonfive/GitBoy", "Gordonfive/codex-worker-platform")
-
-PRIVATE_PATH_PARTS = {
-    "fleet",
-    "assignments",
-    "dispatch",
-    "private-reports",
-    "authorization-state",
-    "production-data",
-    "credentials",
-    "secrets",
-}
-
+PRIVATE_PATH_PARTS = {"fleet", "assignments", "dispatch", "private-reports", "authorization-state", "production-data", "credentials", "secrets"}
 MARKDOWN_LINK = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 
 
-def text_files(paths: list[pathlib.Path]):
+def text_files(paths):
     for path in paths:
         if not path.exists():
             continue
@@ -48,8 +29,8 @@ def text_files(paths: list[pathlib.Path]):
                 yield child
 
 
-def check_obsolete_names() -> list[str]:
-    failures: list[str] = []
+def check_obsolete_names():
+    failures = []
     for path in text_files(ACTIVE_ROOTS + ACTIVE_FILES):
         if path.resolve() == SELF:
             continue
@@ -63,8 +44,8 @@ def check_obsolete_names() -> list[str]:
     return failures
 
 
-def check_public_private_boundary() -> list[str]:
-    failures: list[str] = []
+def check_public_private_boundary():
+    failures = []
     for path in ROOT.rglob("*"):
         if not path.is_file() or ".git" in path.parts:
             continue
@@ -74,8 +55,8 @@ def check_public_private_boundary() -> list[str]:
     return failures
 
 
-def check_markdown_links() -> list[str]:
-    failures: list[str] = []
+def check_markdown_links():
+    failures = []
     for path in ROOT.rglob("*.md"):
         if ".git" in path.parts:
             continue
@@ -98,19 +79,33 @@ def check_markdown_links() -> list[str]:
     return failures
 
 
-def check_specification() -> list[str]:
-    required = ROOT / "docs/specification/sections-068-092.md"
-    if not required.is_file():
-        return ["missing canonical docs/specification/sections-068-092.md"]
-    text = required.read_text(encoding="utf-8")
-    headings = re.findall(r"^# (\d+)\. ", text, flags=re.MULTILINE)
-    expected = [str(number) for number in range(68, 93)]
-    if headings != expected:
-        return [f"specification heading sequence is {headings!r}, expected 68..92"]
-    return []
+def check_specification():
+    spec = ROOT / "docs/specification"
+    required = [
+        spec / "sections-068-092.md",
+        spec / "sections-068-canonical-supplied-fragment.md",
+        spec / "sections-068-077.md",
+        spec / "sections-078-092.md",
+    ]
+    failures = [f"missing specification preservation file: {p.relative_to(ROOT)}" for p in required if not p.is_file()]
+    if failures:
+        return failures
+    fragment = (spec / "sections-068-canonical-supplied-fragment.md").read_text(encoding="utf-8")
+    expected_fragment_markers = ["# 68. Instructions to the First Codex", "## First assignment", "### Step 1 — Establish repository", "### Step 2 — Preserve"]
+    for marker in expected_fragment_markers:
+        if marker not in fragment:
+            failures.append(f"canonical supplied fragment missing marker: {marker}")
+    older = (spec / "sections-068-077.md").read_text(encoding="utf-8") + "\n" + (spec / "sections-078-092.md").read_text(encoding="utf-8")
+    headings = [int(n) for n in re.findall(r"^# (\d+)\. ", older, flags=re.MULTILINE)]
+    if headings != list(range(68, 93)):
+        failures.append(f"preserved continuation heading sequence is {headings!r}, expected 68..92")
+    index = (spec / "sections-068-092.md").read_text(encoding="utf-8")
+    if "latest user-supplied" not in index or "No missing prose was reconstructed or invented" not in index:
+        failures.append("canonical sections 068-092 index does not record owner precedence/non-reconstruction rule")
+    return failures
 
 
-def main() -> int:
+def main():
     failures = []
     failures.extend(check_obsolete_names())
     failures.extend(check_public_private_boundary())
