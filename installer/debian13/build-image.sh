@@ -36,8 +36,12 @@ trap 'rm -rf "$work_root"' EXIT HUP INT TERM
 payload_root=$work_root/payload
 install -d "$payload_root" "$(dirname -- "$output_iso")"
 
+# The archive is retained only as offline recovery/evidence. Normal first boot
+# fetches and installs this exact commit from the public Git repository.
 git -C "$repository_root" archive --format=tar.gz --output="$payload_root/platform.tar.gz" HEAD
+printf '%s\n' "$commit" >"$payload_root/expected-commit"
 install -m 0644 "$script_root/preseed.cfg" "$payload_root/preseed.cfg"
+install -m 0755 "$script_root/preseed-assert.sh" "$payload_root/preseed-assert.sh"
 install -m 0755 "$script_root/first-boot.sh" "$payload_root/first-boot.sh"
 install -m 0755 "$script_root/self-test.sh" "$payload_root/self-test.sh"
 install -m 0755 "$script_root/console-status.sh" "$payload_root/console-status.sh"
@@ -59,7 +63,9 @@ xorriso \
     -outdev "$output_iso" \
     -boot_image any replay \
     -map "$payload_root/preseed.cfg" /preseed.cfg \
+    -map "$payload_root/preseed-assert.sh" /mission-control/preseed-assert.sh \
     -map "$payload_root/platform.tar.gz" /mission-control/platform.tar.gz \
+    -map "$payload_root/expected-commit" /mission-control/expected-commit \
     -map "$payload_root/first-boot.sh" /mission-control/first-boot.sh \
     -map "$payload_root/self-test.sh" /mission-control/self-test.sh \
     -map "$payload_root/console-status.sh" /mission-control/console-status.sh \
@@ -88,9 +94,14 @@ data = {
     "output_iso": Path(output).name,
     "output_sha256": output_hash,
     "destructive_mode": "manual_disk_selection_and_confirmation",
+    "partitioning_default": "guided_entire_disk_lvm_atomic",
+    "volume_group_name": "vincent-vg",
     "human_login_account": False,
     "unattended_self_test": True,
     "persistent_console_status": True,
+    "runtime_source": "public_git_exact_commit",
+    "runtime_repository": "https://github.com/Gordonfive/vincent.git",
+    "preseed_fail_closed": True,
     "embedded_secrets": False,
 }
 Path(manifest).write_text(json.dumps(data, sort_keys=True, indent=2) + "\n")
