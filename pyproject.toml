@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vincent-worker-platform"
+version = "0.1.0"
+description = "Protocol core for reproducible Codex development workers"
+requires-python = ">=3.11"
+
+[project.scripts]
+vincent = "mission_control.vincent_cli:main"
+mission-control-worker = "mission_control.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "worker"}
+
+[tool.setuptools.packages.find]
+where = ["worker"]

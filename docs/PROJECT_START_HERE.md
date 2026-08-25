@@ -1,57 +1,48 @@
 # Project Start Here
 
-Use this file to recover the Vincent / Mission Control project in a completely new ChatGPT or Codex session. Do not depend on prior chat history.
+Use this file to recover the Vincent / Mission Control project in a completely new ChatGPT or Codex session. Prior chat history and legacy repositories are not required for normal recovery.
 
 ## First actions
 
 1. Connect to and fetch both authoritative repositories:
    - `Gordonfive/vincent`
    - `Gordonfive/mission-control`
-2. Read this file, then `docs/ROADMAP.md`, then `docs/CONTINUATION_HANDOFF.md` in both repositories.
-3. Read each repository's `AGENTS.md` before making changes.
-4. Fetch all branches and tags before assuming `main` contains all migration or ISO work.
-5. Treat Git evidence as authoritative and reconcile any newer commits before acting on commit IDs recorded below.
+2. Read this file, `AGENTS.md`, `docs/ROADMAP.md`, and `docs/CONTINUATION_HANDOFF.md` in both repositories.
+3. Treat Git evidence and explicit owner decisions as authoritative.
+4. Inspect current reports before beginning a workstream.
 
 ## Repository roles
 
 - `Gordonfive/vincent` is PUBLIC and owns the generic Vincent worker platform, Debian ISO, installer, first boot, enrollment client, runtime, tests, public-safe documentation, and releases.
 - `Gordonfive/mission-control` is PRIVATE and owns fleet authorization, enrollment approval, inventory, roles, repository scopes, assignments, private coordination, and reports.
-- `Gordonfive/codex-worker-platform` and `Gordonfive/GitBoy` are legacy migration sources. The owner has directed that they be deleted after verified consolidation into the two new repositories.
+- Historical worker-platform and bootstrap repositories were migration sources only. Their known Git histories are preserved under Vincent `legacy/*` refs and they are not required for project recovery.
 
-## Current exact Vincent state
+## Durable Vincent history
 
-Important refs as of 2026-08-25:
+Important accepted/corrective evidence preserved in Git:
 
-- old Vincent `main`: `c6c160e5c7776752370a424852a9be9f95ac7a23`
-- accepted Workstream 1 migration source for ISO testing: `fc032f8df1c0abde295122a8a515e9cdcf7c7b70`
-- durable owner acceptance record: `d6fb92a6a07905dc29a1431b17d2a953abd5fbc8`
-- Workstream 2 correction code: `3a6abb330fb11faffbd638b101ed11dca47f4216`
-- Workstream 2 correction/report branch tip: `4edd5e95a403d605664402a7b1dc2d5c4f53b71b`
-- branch: `workstream/ws2-iso-corrections`
+- accepted Workstream 1 source for ISO testing: `fc032f8df1c0abde295122a8a515e9cdcf7c7b70`;
+- durable owner acceptance record: `d6fb92a6a07905dc29a1431b17d2a953abd5fbc8`;
+- Workstream 2 correction code: `3a6abb330fb11faffbd638b101ed11dca47f4216`;
+- Workstream 2 correction/report tip: `4edd5e95a403d605664402a7b1dc2d5c4f53b71b`.
 
-The first Vincent ISO built from the accepted source was rejected because the obsolete-name scan found stale generated GitBoy metadata. It must not be flashed. Read `docs/reports/VINCENT_WS2_ISO_VALIDATION.md` on `workstream/ws2-iso-corrections`.
+The first ISO built from the accepted source was rejected. Its SHA-256 is:
 
-## Two active workstreams
+`bcebd5fed3c82f86c7259b8dd71297e99057f630698c1742e4461265b78842a2`
 
-### A. Consolidation and legacy-repository retirement
+It must never be flashed. Migration consolidation does not authorize a replacement ISO source.
 
-Finish moving all useful implementation, native history, documentation, Project DNA, reports, and private control-plane state into Vincent and Mission Control. Prove the new repositories are self-sufficient. Then execute the owner's directive to delete the two legacy repositories only after preservation is verified.
+## Specification preservation
 
-### B. Vincent ISO creation and physical test
-
-Review the Workstream 2 correction, establish one exact authorized replacement source commit, rebuild and fully inspect the Vincent ISO, then proceed through the separately gated flash and physical-install sequence.
-
-These workstreams may be handled in separate ChatGPT threads. Coordinate only through Git; each thread must fetch current refs before acting.
+The specification archive under `docs/specification/` preserves Sections 1–260. For Sections 68–92, the owner directed that the latest supplied source is authoritative where it differs: the exact newer Section 68 fragment is preserved and supersedes the conflicting older Section 68; preserved Sections 69–92 remain authoritative because no newer replacement was supplied. The precedence is recorded in `docs/specification/sections-068-092.md`.
 
 ## Safety boundaries
 
 - Never put private fleet data or secrets in public Vincent.
 - Never commit raw tokens, passwords, private keys, authentication caches, reusable enrollment credentials, or production data to either repository.
-- Do not flash an unidentified storage device.
 - Do not use the rejected ISO.
-- Preserve unexpected branches or dirty work until understood.
-- Destructive repository deletion is conditional on successful preservation/consolidation proof.
+- Migration completion does not authorize ISO flashing, release publication, production/project credentials, worker enrollment, or destructive hardware operations.
 
 ## Recovery goal
 
-A fresh ChatGPT project connected only to `Gordonfive/vincent` and `Gordonfive/mission-control` must be able to determine what the system is, why it exists, what has been completed, what failed, what remains, and exactly how to continue without access to the old ChatGPT project.
+A fresh project connected only to Vincent and Mission Control must be able to determine what the system is, why it exists, what has been completed, what failed, authority boundaries, and exactly how to continue. Migration reports in `docs/reports/` provide preservation and validation evidence.

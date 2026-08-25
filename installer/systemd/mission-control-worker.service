@@ -1,0 +1,25 @@
+[Unit]
+Description=Mission Control Codex Worker
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/mission-control/worker.toml
+
+[Service]
+Type=simple
+User=mission-control
+Group=mission-control
+ExecStartPre=/opt/mission-control/venv/bin/mission-control-worker --config /etc/mission-control/worker.toml doctor
+ExecStart=/opt/mission-control/venv/bin/mission-control-worker --config /etc/mission-control/worker.toml serve
+Restart=on-failure
+RestartPreventExitStatus=3
+RestartSec=60
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/mission-control /srv/codex
+UMask=0077
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

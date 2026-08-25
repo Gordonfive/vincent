@@ -1,0 +1,15 @@
+[Unit]
+Description=Mission Control first-boot bootstrap
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/mission-control-install/status.json
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/mission-control-first-boot
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
