@@ -104,13 +104,13 @@ jobs:
               "$scan_root/platform/worker"
               "$scan_root/platform/pyproject.toml"
             )
-            if grep -R -I -n -E -- \
-              '(GitBoy|gitboy|Gordonfive/codex-worker-platform|Gordonfive/GitBoy)' \
-              "${active_paths[@]}"; then
+            obsolete_regex='(Git''Boy|git''boy|Gordonfive/codex-worker''-platform|Gordonfive/Git''Boy)'
+            if grep -R -I -n -E -- "$obsolete_regex" "${active_paths[@]}"; then
               echo 'active obsolete product or repository identifier detected' >&2
               exit 22
             fi
-            if find "${active_paths[@]}" -iname '*gitboy*' -print -quit | grep -q .; then
+            obsolete_glob='*git''boy*'
+            if find "${active_paths[@]}" -iname "$obsolete_glob" -print -quit | grep -q .; then
               echo 'active obsolete path name detected' >&2
               exit 23
             fi
