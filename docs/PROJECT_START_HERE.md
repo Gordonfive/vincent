@@ -9,7 +9,7 @@
 5. `protocols/WORKER_PROTOCOL_V1.md`
 6. `protocols/SCHEMAS_V1.md`
 7. `operations/RECOVERY_MODEL.md`
-8. `ROADMAP.md`
+8. `CONTINUATION_HANDOFF.md`\n9. `ROADMAP.md`
 
 ## Current state
 
@@ -20,7 +20,7 @@
 - Destructive-test authority: none
 - Public repository: `Gordonfive/vincent`
 - Private fleet control: `Gordonfive/mission-control`
-- Next gate: owner acceptance of the exact Vincent migration commit before ISO work resumes
+- Workstream 1: complete pending explicit owner acceptance of one exact commit\n- Next gate: owner acceptance of the integration-branch commit containing the full roadmap, continuation handoff, and verification report
 
 ## Durable-state locations
 
@@ -30,4 +30,4 @@
 - Security: `security/`
 - Recovery and operations: `operations/`
 - Original specification: `specification/`
-- Implementation order: `ROADMAP.md`
+- Implementation order: `ROADMAP.md`\n- Current continuation state: `CONTINUATION_HANDOFF.md`
