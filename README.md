@@ -38,8 +38,6 @@ This repository must never contain:
 
 Lower layers may add specificity but cannot weaken higher-level security restrictions.
 
-## Current migration state
+## Migration state
 
-Complete legacy histories and the integrated worker platform are preserved on Vincent migration/legacy branches. Workstream 2 ISO correction work is on `workstream/ws2-iso-corrections`. The default branch contains durable recovery documentation so a new project can finish consolidation safely.
-
-The owner has directed that `Gordonfive/codex-worker-platform` and `Gordonfive/GitBoy` be deleted after verified consolidation into Vincent and Mission Control. See `docs/ROADMAP.md` for the preservation and deletion gates.
+The generic worker implementation, installer, bootstrap, runtime, tests, Project DNA, protocols, Workstream 1 acceptance evidence, Workstream 2 corrections, and complete specification preservation records are consolidated on the migration-completion candidate. The default branch should be treated as authoritative only after the recorded consolidation merge and validation gates are complete.
