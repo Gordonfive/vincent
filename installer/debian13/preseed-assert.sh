@@ -24,7 +24,8 @@ check() {
     [ "$actual" = "$expected" ] || fail "$key expected '$expected' but installer has '$actual'"
 }
 
-check passwd/root-login false
+check passwd/root-login true
+check passwd/root-password-crypted '!vincent-installer-no-login!'
 check passwd/make-user false
 check netcfg/get_hostname vincent-worker
 check partman-auto/method lvm
