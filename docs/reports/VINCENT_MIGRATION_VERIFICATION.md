@@ -11,6 +11,9 @@
 - Vincent preservation commit: `c981a5be667649d282c708763d67dcb47f7b28c9`
 - Vincent integration branch: `migration/integrate-worker-platform`
 - Vincent integration commit before this verification update: `e6b45e7a6daf801b1aaf777b909d4c580af257c6`
+- GitBoy source commit: `191f21a30ddf94d6181cbfbee1206c3fc5029c66`
+- Vincent GitBoy preservation branch: `migration/GitBoy`
+- Vincent GitBoy preservation commit: `5f7a90ed81c2dd5b8dd177c7adbd1cb327b35e9a`
 
 ## Migration boundary
 
