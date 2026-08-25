@@ -25,7 +25,15 @@ VS Code/VSCodium remains optional; the implementation and validation are headles
 
 ## Legacy-deletion gate
 
-The Vincent preservation branches contain complete source snapshots and exact source-commit provenance. They do not yet contain the legacy repositories' complete native commit DAGs because this migration runtime could write GitHub objects but could not authenticate a Git mirror transfer. Before either legacy repository is deleted, perform and verify a mirror-history import (or preserve verified Git bundles in Vincent). Deletion remains prohibited until that evidence and a successful Vincent ISO build are both accepted by the owner.
+Native Git history transfer completed on 2026-08-25 and was independently verified by exact source/destination ref equality:
+
+- `codex-worker-platform` main `0f6e93bb8cccc26edf8887eb50641ae0fe1495a2` → `legacy/codex-worker-platform/main`
+- `codex-worker-platform` checkpoint `5521b3fc1fd273ffc71e47c344d6bb9083cfdb3f` → `legacy/codex-worker-platform/checkpoint/vincent-migration-20260825`
+- `GitBoy` main `191f21a30ddf94d6181cbfbee1206c3fc5029c66` → `legacy/GitBoy/main`
+
+Migration evidence: `vincent-history-migration-20260825T175936Z.log`, with `HISTORY_MIGRATION_STATUS=PASS` and both repositories marked `VERIFIED_REPOSITORY`.
+
+All source branch tips and their reachable native commit DAGs now exist in Vincent. Legacy-repository deletion remains prohibited until a successful Vincent ISO build is accepted by the owner.
 
 ## Validation
 
