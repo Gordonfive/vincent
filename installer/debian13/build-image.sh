@@ -36,8 +36,6 @@ trap 'rm -rf "$work_root"' EXIT HUP INT TERM
 payload_root=$work_root/payload
 install -d "$payload_root" "$(dirname -- "$output_iso")"
 
-# The archive is retained only as offline recovery/evidence. Normal first boot
-# fetches and installs this exact commit from the public Git repository.
 git -C "$repository_root" archive --format=tar.gz --output="$payload_root/platform.tar.gz" HEAD
 printf '%s\n' "$commit" >"$payload_root/expected-commit"
 install -m 0644 "$script_root/preseed.cfg" "$payload_root/preseed.cfg"
@@ -45,8 +43,10 @@ install -m 0755 "$script_root/preseed-assert.sh" "$payload_root/preseed-assert.s
 install -m 0755 "$script_root/first-boot.sh" "$payload_root/first-boot.sh"
 install -m 0755 "$script_root/self-test.sh" "$payload_root/self-test.sh"
 install -m 0755 "$script_root/console-status.sh" "$payload_root/console-status.sh"
+install -m 0755 "$script_root/codex-console.sh" "$payload_root/codex-console.sh"
 install -m 0644 "$script_root/mission-control-first-boot.service" "$payload_root/mission-control-first-boot.service"
 install -m 0644 "$script_root/vincent-console-status.service" "$payload_root/vincent-console-status.service"
+install -m 0644 "$script_root/vincent-codex-console.service" "$payload_root/vincent-codex-console.service"
 install -m 0644 "$script_root/isolinux-mission-control.cfg" "$payload_root/isolinux-mission-control.cfg"
 install -m 0644 "$script_root/grub-mission-control.cfg" "$payload_root/grub-mission-control.cfg"
 
@@ -69,8 +69,10 @@ xorriso \
     -map "$payload_root/first-boot.sh" /mission-control/first-boot.sh \
     -map "$payload_root/self-test.sh" /mission-control/self-test.sh \
     -map "$payload_root/console-status.sh" /mission-control/console-status.sh \
+    -map "$payload_root/codex-console.sh" /mission-control/codex-console.sh \
     -map "$payload_root/mission-control-first-boot.service" /mission-control/mission-control-first-boot.service \
     -map "$payload_root/vincent-console-status.service" /mission-control/vincent-console-status.service \
+    -map "$payload_root/vincent-codex-console.service" /mission-control/vincent-codex-console.service \
     -map "$payload_root/isolinux-mission-control.cfg" /isolinux/mission-control.cfg \
     -map "$work_root/menu.cfg" /isolinux/menu.cfg \
     -map "$work_root/grub.cfg" /boot/grub/grub.cfg \
@@ -99,6 +101,9 @@ data = {
     "human_login_account": False,
     "unattended_self_test": True,
     "persistent_console_status": True,
+    "live_console_work_output": True,
+    "interactive_codex_console": "tty2_non_root",
+    "network_bootstrap_retry": True,
     "runtime_source": "public_git_exact_commit",
     "runtime_repository": "https://github.com/Gordonfive/vincent.git",
     "preseed_fail_closed": True,
