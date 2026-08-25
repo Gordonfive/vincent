@@ -9,6 +9,7 @@ import json
 import os
 import pwd
 import re
+import spwd
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -63,6 +64,12 @@ except KeyError:
 
 human_accounts = [entry.pw_name for entry in pwd.getpwall() if 1000 <= entry.pw_uid < 60000]
 record("no_human_login_accounts", not human_accounts, ",".join(human_accounts) or "none")
+
+try:
+    root_shadow = spwd.getspnam("root").sp_pwdp
+    record("root_password_locked", root_shadow.startswith("!") or root_shadow.startswith("*"), root_shadow[:32])
+except Exception as exc:
+    record("root_password_locked", False, repr(exc))
 
 request_path = Path("/var/lib/mission-control/identity/enrollment-request.json")
 try:
