@@ -6,7 +6,7 @@ Purpose: allow the current ChatGPT project to be deleted without losing operatio
 
 ## Mission
 
-VINCENT — Verified Intelligent Networked Codex Execution Node Technology — is the reusable, replaceable worker platform. Mission Control is the private coordination/control plane. Git is the durable source of truth; chat is disposable.
+VINCENT — Verified Intelligent Node for Codex Execution, Networking, and Tasks — is the reusable, replaceable worker platform. Mission Control is the private coordination/control plane. Git is the durable source of truth; chat is disposable.
 
 ## Immediate owner priorities
 
