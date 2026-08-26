@@ -1,5 +1,7 @@
 # Vincent Decision Register
 
+**Register updated:** 2026-08-26T08:10:43-08:00
+
 This register records owner-approved product and architecture decisions that affect Vincent's design or operation.
 
 The roadmap describes what remains to be accomplished. Architecture and specification documents describe the resulting system. This register explains consequential choices and why they were made.
@@ -20,6 +22,14 @@ The timestamp represents when the owner made or explicitly approved the decision
 Do not delete an accepted decision merely because the design later changes. Mark it `Superseded` and identify its replacement. Git history remains useful, but the current document must also make the decision chain understandable without reconstructing old commits.
 
 Detailed ADRs may live under `docs/decisions/`. This file is the human-readable index and concise decision history. New ADRs and decision records must follow the same timestamp and conflict-resolution rule.
+
+## Incremental refresh rule
+
+Agents should retain the timestamp of the newest authoritative decision they have already incorporated. Before any build, release, flash-preparation step, or other consequential execution, ChatGPT or Codex must refresh the decision register and ingest every decision newer than that remembered timestamp.
+
+Agents do **not** need to re-read older decisions that are already known and whose authoritative timestamps are at or before the agent's recorded decision checkpoint. If the agent has no trustworthy checkpoint, it must read the full current decision set once and establish one.
+
+A build must not proceed from stale decision knowledge. If a newer decision changes build requirements, architecture, safety gates, account behavior, naming, credentials, installer behavior, or acceptance criteria, the build instructions and source must be reconciled first.
 
 ## VINCENT-DEC-001 — Worker Unix identity
 
@@ -49,6 +59,28 @@ A dedicated service identity provides predictable ownership, least-privilege iso
 ### Supersedes
 
 Earlier implementation assumptions that a normal installer-created user such as `gitboy` or another human account is required for routine worker operation.
+
+## VINCENT-DEC-002 — Incremental decision refresh before builds
+
+**Timestamp:** 2026-08-26T08:10:43-08:00  
+**Status:** Accepted
+
+### Decision
+
+Before every build, ChatGPT or Codex must check the authoritative decision register for decisions newer than its last-known decision timestamp and incorporate those changes before execution. Previously known decisions do not need to be re-read unless the agent lacks a trustworthy decision checkpoint or a newer decision indicates that earlier material must be revisited.
+
+The roadmap must carry a full last-updated timestamp so an agent can determine whether its roadmap knowledge is stale and refresh only when necessary.
+
+### Rationale
+
+This preserves authoritative owner decisions at build time while avoiding repeated re-reading of unchanged project history. It also gives long-lived agents, new sessions, and concurrent workers an inexpensive freshness check before consequential operations.
+
+### Consequences
+
+- Build workflows need an explicit decision-refresh gate before build execution.
+- Agents should record the newest incorporated decision timestamp in their work logs/handoffs when practical.
+- `docs/ROADMAP.md` must expose an ISO 8601 last-updated timestamp with UTC offset.
+- If the roadmap timestamp is newer than an agent's known roadmap checkpoint, the roadmap must be refreshed before continuing roadmap-directed work.
 
 ## Existing detailed decisions
 
