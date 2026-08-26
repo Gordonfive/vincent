@@ -1,6 +1,6 @@
 # Vincent and Mission Control Roadmap
 
-**Roadmap updated:** 2026-08-26T13:30:00-08:00
+**Roadmap updated:** 2026-08-26T13:35:00-08:00
 
 This roadmap describes remaining work and milestones. Detailed decisions are in `docs/DECISIONS.md`; historical validation evidence belongs in `docs/reports/`; continuation state belongs in `docs/CONTINUATION_HANDOFF.md`.
 
@@ -29,20 +29,20 @@ Agents retain the newest roadmap and decision timestamps incorporated and refres
 
 1. Refresh newer decisions/roadmap state before every build.
 2. Establish one exact authorized ISO source commit.
-3. Assign the next unique monotonically increasing ISO build number.
-4. Build and validate the ISO with matching build identity across image, USB, manifests, checksums, logs, reports, and installed status metadata.
+3. Assign the next unique monotonically increasing **installer build number**.
+4. Build and validate the ISO with matching installer-build identity across ISO filename/metadata, USB label, installer manifests/checksums, logs, reports, and durable installation provenance.
 5. Preserve normal interactive Debian disk partitioning; Vincent does not force a storage layout.
 6. Fresh-install a disposable workstation and prove generic unassigned READY operation: networking, stable identity, self-checks, diagnostics, status, and management access.
 7. Prove the dedicated least-privileged `vincent` service identity and separately controlled privileged/recovery interfaces.
-8. Prove the status screen displays the original installed ISO build number.
+8. Prove the status screen clearly distinguishes the immutable original **installer build number** from the current **Vincent software version/build** as required by `VINCENT-DEC-009`.
 9. Prove Debian/system maintenance and representative development-tool maintenance without reimaging.
-10. Implement `VINCENT-DEC-008` in V1 if it does not materially delay the core proof: periodically check the trusted public Vincent upstream and safely update Vincent software in place. At minimum, V1 should prove update discovery and a safe in-place Vincent application update path. If this cannot be completed safely without materially delaying V1, it becomes a required V1.1 gate rather than being implemented unsafely.
+10. Implement `VINCENT-DEC-008` in V1 if it does not materially delay the core proof: periodically check the trusted public Vincent upstream and safely update Vincent software in place. The update must advance only the Vincent software version/build and must not rewrite the installer-build provenance.
 11. Prove the V1 operator-selected Git connection workflow: repository URL entry, interactive authentication, local connection state, project/dependency profile, assignment input, and report/output location.
 12. Prove project profiles can constrain dependency versions and that Vincent respects those constraints during installation and maintenance.
 13. Execute one harmless bounded Git-assigned task with safe ownership/claiming, isolated work, validation, and report publication.
-14. Repeat a clean installation and publish physical-test evidence.
+14. Repeat a clean installation and publish physical-test evidence recording both installer and current Vincent software identities.
 
-**V1 acceptance:** two reproducible fresh installs reach unassigned READY without private Mission Control configuration; one worker connects to an operator-selected private Git repository, prepares its constrained task environment, completes one bounded assignment, and publishes its report. Debian/toolchain maintenance works without reimaging. Vincent self-update is included if safely achievable within V1 scope; otherwise it is explicitly carried as the first required V1.1 lifecycle feature.
+**V1 acceptance:** two reproducible fresh installs reach unassigned READY without private Mission Control configuration; one worker connects to an operator-selected private Git repository, prepares its constrained task environment, completes one bounded assignment, and publishes its report. Debian/toolchain maintenance works without reimaging. Installer-build provenance remains immutable while Vincent software can advance independently through in-place update. Vincent self-update is included if safely achievable within V1 scope; otherwise it is explicitly carried as the first required V1.1 lifecycle feature.
 
 ## Version 1.1 lifecycle work
 
@@ -51,7 +51,7 @@ The following work belongs in V1.1 unless completed safely during V1:
 1. Complete/strengthen periodic public-upstream Vincent self-update from `Gordonfive/vincent` if the full mechanism was deferred from V1.
 2. Add robust rollback/recovery for failed Vincent application updates beyond the minimum V1 safety mechanism.
 3. Define update channels/policies such as stable versus testing, staged/canary adoption, maintenance windows, and automatic versus operator-approved activation.
-4. Improve update reporting so status clearly distinguishes original ISO build identity, current Vincent software version/release, Debian maintenance state, and project-tool version constraints.
+4. Improve update reporting so status clearly distinguishes original installer build identity, current Vincent software version/build, Debian maintenance state, and project-tool version constraints.
 5. Ensure routine Vincent application upgrades never require a new ISO except when an underlying installer/base-image change genuinely requires reinstallation.
 
 ## Later milestones
@@ -76,4 +76,5 @@ The following work belongs in V1.1 unless completed safely during V1:
 - Vincent is generic by default; private project/control sources are operator-selected after installation.
 - Vincent maintains Debian, its own software, runtime dependencies, and development toolchain while honoring active project version constraints.
 - The public Vincent upstream is the authoritative source for Vincent software updates; a fresh ISO is not the normal application-update mechanism.
+- Installer build identity and Vincent software identity are distinct lifecycle values and must never be conflated.
 - Public Vincent content never exposes private project/fleet state or secrets.
