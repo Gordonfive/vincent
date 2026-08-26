@@ -1,6 +1,6 @@
 # Vincent Decision Register
 
-**Register updated:** 2026-08-26T08:20:01-08:00
+**Register updated:** 2026-08-26T08:30:34-08:00
 
 This register records owner-approved product and architecture decisions that affect Vincent's design or operation.
 
@@ -131,6 +131,28 @@ A visible build number makes it possible to identify physical media and image fi
 - Build manifests, checksums, logs, and physical-test reports must record the build number.
 - Validation must fail if artifact identifiers disagree about the build number.
 - The precise numbering format and allocation mechanism may be implemented separately, but build numbers must be unique and monotonically increasing within the Vincent ISO build sequence.
+
+## VINCENT-DEC-005 — Worker status displays installed build number
+
+**Timestamp:** 2026-08-26T08:30:34-08:00  
+**Status:** Accepted
+
+### Decision
+
+The Vincent worker status screen must display the installed Vincent build number in a clearly visible location.
+
+The displayed build number must come from the installed build metadata and must match the build number associated with the ISO/image from which that worker was installed.
+
+### Rationale
+
+Displaying the build number on the worker itself makes physical and remote troubleshooting easier and allows operators to immediately correlate a running worker with its source image, USB media, manifests, checksums, and validation evidence.
+
+### Consequences
+
+- The build number must survive installation as durable local metadata.
+- The Vincent status screen must render that value.
+- Validation must confirm the displayed worker build number matches the installed build metadata.
+- Physical-test reports must record and verify the build number shown on the worker status screen.
 
 ## Existing detailed decisions
 
