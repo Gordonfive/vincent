@@ -13,7 +13,7 @@ install -d -o "$service_user" -g "$service_user" -m 0700 \
     "$service_home" "$service_config" "$service_cache" "$service_data" "$service_home/.local/bin"
 
 service_run() {
-    runuser -u "$service_user" -- env \
+    runuser -u "$service_user" --login -- env \
         HOME="$service_home" USER="$service_user" LOGNAME="$service_user" \
         XDG_CONFIG_HOME="$service_config" XDG_CACHE_HOME="$service_cache" \
         XDG_DATA_HOME="$service_data" PATH=/usr/local/bin:/usr/bin:/bin "$@"
