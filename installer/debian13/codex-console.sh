@@ -1,6 +1,11 @@
 #!/bin/sh
 set -eu
 
+service_home=/var/lib/mission-control
+service_config=$service_home/.config
+service_cache=$service_home/.cache
+service_data=$service_home/.local/share
+
 while :; do
     printf '\033c'
     echo 'VINCENT INTERACTIVE CODEX CONSOLE'
@@ -29,7 +34,12 @@ while :; do
     printf '\033c'
     set +e
     runuser -u mission-control -- env \
-        HOME=/var/lib/mission-control \
+        HOME="$service_home" \
+        USER=mission-control \
+        LOGNAME=mission-control \
+        XDG_CONFIG_HOME="$service_config" \
+        XDG_CACHE_HOME="$service_cache" \
+        XDG_DATA_HOME="$service_data" \
         PATH=/usr/local/bin:/usr/bin:/bin \
         /usr/local/bin/codex
     rc=$?
