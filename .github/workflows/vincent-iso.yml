@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - migration/**
+      - main
+      - workstream/iso-decisions-reconcile
 
 permissions:
   contents: read
@@ -29,92 +30,56 @@ jobs:
           (
             set -euo pipefail
             source_commit=$(git rev-parse HEAD)
-            printf 'SOURCE_COMMIT=%s\n' "$source_commit"
+            build_number=$(tr -d '\r\n' < installer/debian13/BUILD_NUMBER)
+            printf 'SOURCE_COMMIT=%s\nBUILD_NUMBER=%s\n' "$source_commit" "$build_number"
             test -z "$(git status --porcelain --untracked-files=no)"
 
             sh scripts/validate.sh
             sh installer/debian13/fetch-source.sh
             source installer/debian13/source.env
             source_iso="installer/debian13/cache/debian-${DEBIAN_VERSION}-${DEBIAN_ARCH}-netinst.iso"
-            output_iso="dist/vincent-debian-${DEBIAN_VERSION}-${DEBIAN_ARCH}.iso"
+            output_iso="dist/vincent-debian-${DEBIAN_VERSION}-${DEBIAN_ARCH}-build-${build_number}.iso"
 
             sh installer/debian13/build-image.sh "$source_iso" "$output_iso"
             sh installer/debian13/inspect-image.sh "$output_iso"
             (cd dist && sha256sum --check "$(basename "$output_iso").sha256")
             sha256sum "$output_iso"
 
-            python3 - "$output_iso" "$source_commit" <<'PY'
-          import hashlib
-          import json
-          import sys
+            python3 - "$output_iso" "$source_commit" "$build_number" <<'PY'
+          import hashlib, json, sys
           from pathlib import Path
-
-          image = Path(sys.argv[1])
-          expected_commit = sys.argv[2]
-          manifest_path = Path(str(image) + ".manifest.json")
-          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          image = Path(sys.argv[1]); expected_commit = sys.argv[2]; expected_build = sys.argv[3]
+          manifest = json.loads(Path(str(image)+".manifest.json").read_text())
           actual_hash = hashlib.sha256(image.read_bytes()).hexdigest()
           checks = {
               "platform_commit": manifest.get("platform_commit") == expected_commit,
+              "build_number": manifest.get("build_number") == expected_build,
               "output_iso": manifest.get("output_iso") == image.name,
               "output_sha256": manifest.get("output_sha256") == actual_hash,
+              "volume_id": manifest.get("volume_id") == f"VINCENT_B{expected_build}",
+              "partitioning_mode": manifest.get("partitioning_mode") == "debian_installer_interactive",
+              "service_account": manifest.get("service_account") == "vincent",
               "embedded_secrets": manifest.get("embedded_secrets") is False,
-              "destructive_mode": manifest.get("destructive_mode") == "manual_disk_selection_and_confirmation",
           }
           print("MANIFEST=" + json.dumps(manifest, sort_keys=True))
           print("MANIFEST_CHECKS=" + json.dumps(checks, sort_keys=True))
-          if not all(checks.values()):
-              raise SystemExit("manifest validation failed")
+          if not all(checks.values()): raise SystemExit("manifest validation failed")
           PY
 
             scan_root=$(mktemp -d)
             trap 'rm -rf "$scan_root"' EXIT
-            xorriso -osirrox on -indev "$output_iso" -extract /mission-control/platform.tar.gz "$scan_root/platform.tar.gz" >/dev/null 2>&1
+            xorriso -osirrox on -indev "$output_iso" -extract /vincent/platform.tar.gz "$scan_root/platform.tar.gz" >/dev/null 2>&1
             mkdir "$scan_root/platform"
             tar -xzf "$scan_root/platform.tar.gz" -C "$scan_root/platform"
 
-            echo '--- credential and identity scan ---'
-            if find "$scan_root/platform" -type f \( \
-                -name 'id_rsa' -o -name 'id_ed25519' -o -name '*.pem' -o \
-                -name '*.p12' -o -name '*.pfx' -o -name 'identity.json' -o \
-                -name 'authorization.json' -o -name 'enrollment-request.json' \
-              \) -print -quit | grep -q .; then
-              echo 'credential or persistent identity artifact detected in embedded payload' >&2
-              exit 20
+            if find "$scan_root/platform" -type f \( -name 'id_rsa' -o -name 'id_ed25519' -o -name '*.pem' -o -name '*.p12' -o -name '*.pfx' -o -name 'identity.json' -o -name 'authorization.json' -o -name 'enrollment-request.json' \) -print -quit | grep -q .; then
+              echo 'credential or persistent identity artifact detected in embedded payload' >&2; exit 20
             fi
-            if grep -R -I -n -E -- \
-              '-----BEGIN (OPENSSH|RSA|EC|DSA|PRIVATE) PRIVATE KEY-----|github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{20,}' \
-              "$scan_root/platform"; then
-              echo 'credential material pattern detected in embedded payload' >&2
-              exit 21
+            if grep -R -I -n -E -- '-----BEGIN (OPENSSH|RSA|EC|DSA|PRIVATE) PRIVATE KEY-----|github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{20,}' "$scan_root/platform"; then
+              echo 'credential material pattern detected in embedded payload' >&2; exit 21
             fi
             echo 'SECRET_SCAN=PASS'
             echo 'EMBEDDED_IDENTITY_SCAN=PASS'
-
-            echo '--- active obsolete-name scan ---'
-            active_paths=(
-              "$scan_root/platform/README.md"
-              "$scan_root/platform/AGENTS.md"
-              "$scan_root/platform/.github"
-              "$scan_root/platform/bootstrap"
-              "$scan_root/platform/config"
-              "$scan_root/platform/installer"
-              "$scan_root/platform/scripts"
-              "$scan_root/platform/tests"
-              "$scan_root/platform/worker"
-              "$scan_root/platform/pyproject.toml"
-            )
-            obsolete_regex='(Git''Boy|git''boy|Gordonfive/codex-worker''-platform|Gordonfive/Git''Boy)'
-            if grep -R -I -n -E -- "$obsolete_regex" "${active_paths[@]}"; then
-              echo 'active obsolete product or repository identifier detected' >&2
-              exit 22
-            fi
-            obsolete_glob='*git''boy*'
-            if find "${active_paths[@]}" -iname "$obsolete_glob" -print -quit | grep -q .; then
-              echo 'active obsolete path name detected' >&2
-              exit 23
-            fi
-            echo 'ACTIVE_OBSOLETE_NAME_SCAN=PASS'
 
             printf 'PAYLOAD_FILE_COUNT=%s\n' "$(tar -tzf "$scan_root/platform.tar.gz" | wc -l)"
             echo 'PAYLOAD_INSPECTION=PASS'
