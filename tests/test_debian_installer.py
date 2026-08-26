@@ -119,13 +119,24 @@ class DebianInstallerTests(unittest.TestCase):
             self.assertIn(marker, inspect)
         self.assertIn("vincent-vg", inspect)
 
-    def test_toolchain_uses_signed_repositories_and_saved_codex_installer(self):
+    def test_toolchain_uses_service_home_and_xdg_environment(self):
         script = (ROOT / "bootstrap/provision-worker-baseline.sh").read_text()
         self.assertIn("Signed-By: /etc/apt/keyrings/docker.asc", script)
         self.assertIn("Signed-By: /etc/apt/keyrings/ddev.asc", script)
         self.assertIn("https://chatgpt.com/codex/install.sh", script)
         self.assertIn("codex-install.sh.sha256", script)
         self.assertIn('install -o root -g root -m 0755 "$codex_binary" /usr/local/bin/codex', script)
+        for marker in (
+            "HOME=\"$service_home\"",
+            "USER=mission-control",
+            "LOGNAME=mission-control",
+            "XDG_CONFIG_HOME=\"$service_config\"",
+            "XDG_CACHE_HOME=\"$service_cache\"",
+            "XDG_DATA_HOME=\"$service_data\"",
+        ):
+            self.assertIn(marker, script)
+        self.assertIn("runuser -u mission-control", script)
+        self.assertNotIn("runuser -u nobody", script)
         self.assertNotIn("curl -fsSL https://chatgpt.com/codex/install.sh |", script)
 
     def test_first_boot_retries_network_and_fetches_exact_public_git_commit(self):
@@ -140,16 +151,17 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertIn("ENROLLMENT_REQUIRED", script)
         self.assertNotIn("tar -xzf", script)
 
-    def test_console_has_fixed_status_live_output_and_codex_hint(self):
+    def test_console_has_fixed_status_live_output_and_explicit_failure(self):
         service = (INSTALLER / "vincent-console-status.service").read_text()
         script = (INSTALLER / "console-status.sh").read_text()
         self.assertIn("Conflicts=getty@tty1.service", service)
         self.assertIn("TTYPath=/dev/tty1", service)
-        for marker in ("VINCENT WORKER", "LIVE WORK OUTPUT", "EXPECTED GIT", "GITHUB DNS", "Alt+F2", "FAILED CHECKS"):
+        for marker in ("VINCENT WORKER", "LIVE WORK OUTPUT", "EXPECTED GIT", "GITHUB DNS", "Alt+F2", "FAILED CHECKS", "CURRENT TASK", "LAST ERROR"):
             self.assertIn(marker, script)
+        self.assertIn('if state == "FAILED":\n    overall = "FAIL"', script)
         self.assertNotIn("unenrolled", script)
 
-    def test_tty2_codex_console_is_non_root_and_no_login_prompt(self):
+    def test_tty2_codex_console_is_non_root_and_has_service_environment(self):
         service = (INSTALLER / "vincent-codex-console.service").read_text()
         script = (INSTALLER / "codex-console.sh").read_text()
         preseed = (INSTALLER / "preseed.cfg").read_text()
@@ -157,6 +169,9 @@ class DebianInstallerTests(unittest.TestCase):
         self.assertIn("Conflicts=getty@tty2.service", service)
         self.assertIn("runuser -u mission-control", script)
         self.assertIn("VINCENT INTERACTIVE CODEX CONSOLE", script)
+        self.assertIn("XDG_CONFIG_HOME=\"$service_config\"", script)
+        self.assertIn("XDG_CACHE_HOME=\"$service_cache\"", script)
+        self.assertIn("XDG_DATA_HOME=\"$service_data\"", script)
         self.assertIn("systemctl mask getty@tty1.service getty@tty2.service", preseed)
         self.assertIn("vincent-codex-console.service", preseed)
         self.assertNotIn("/bin/bash", script)
