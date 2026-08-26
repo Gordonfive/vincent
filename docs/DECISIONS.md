@@ -1,6 +1,6 @@
 # Vincent Decision Register
 
-**Register updated:** 2026-08-26T08:30:34-08:00
+**Register updated:** 2026-08-26T13:22:00-08:00
 
 This register records owner-approved product and architecture decisions that affect Vincent's design or operation.
 
@@ -153,6 +153,46 @@ Displaying the build number on the worker itself makes physical and remote troub
 - The Vincent status screen must render that value.
 - Validation must confirm the displayed worker build number matches the installed build metadata.
 - Physical-test reports must record and verify the build number shown on the worker status screen.
+
+## VINCENT-DEC-006 — Vincent V1 is control-source agnostic and uses operator-selected Git
+
+**Timestamp:** 2026-08-26T13:22:00-08:00  
+**Status:** Accepted
+
+### Decision
+
+A freshly installed Vincent worker must not know about or depend on `Gordonfive/mission-control` by default. Vincent is a generic worker appliance that boots into a self-contained unassigned state, can run local health/self-checks, and can obtain Vincent software updates independently of any project control repository.
+
+When the operator is ready to assign the worker, Vincent presents a connection/enrollment workflow. The architecture may later support multiple control sources such as ChatGPT, a Git repository, or a dedicated Mission Control server. Version 1 implements the simplest control source: an operator-supplied Git repository URL.
+
+For a private Git repository, Vincent must guide the human through authentication using a supported interactive mechanism such as account login/device authorization, a narrowly scoped connection key/token, OTP-backed authorization, or another credential flow appropriate to the Git host. No private repository credential is baked into the ISO.
+
+After authorization, Vincent reads project-specific instructions from the connected repository. Those instructions may include a project profile or dependency 'shopping list' describing software and configuration needed for that workload, such as DDEV, Drupal, language runtimes, or other tools not required by generic Vincent.
+
+The V1 Git control contract must include at minimum:
+
+- an assignment input that tells the worker what work to perform; and
+- a report/output location where the worker records the result of that work.
+
+Additional files or directories may be defined as needed for project configuration, dependency profiles, state, validation evidence, locking/claiming, or coordination.
+
+### Rationale
+
+Keeping Vincent unaware of a specific private control repository preserves its value as a reusable generic worker and prevents project-specific/private configuration from leaking into the public image. A Git-backed V1 provides durable coordination using infrastructure already available without requiring a separate server application before the worker concept is proven.
+
+### Consequences
+
+- Remove any default/bootstrap assumption that Vincent automatically contacts `Gordonfive/mission-control` or any other project-specific private repository.
+- Generic Vincent must remain useful before assignment: boot, networking, self-checks, diagnostics, status display, and Vincent update checks must work without enrollment.
+- Project-specific packages such as DDEV or Drupal tooling are not generic-image requirements unless separately justified; they may be installed after connection according to the selected repository's project profile.
+- The Git repository URL and authentication state become part of local worker enrollment/configuration after the operator explicitly connects the worker.
+- Repository credentials must be scoped as narrowly as practical and stored using an appropriate protected local mechanism.
+- The Git assignment/report protocol must be documented and made safe for retry, concurrent workers, and interrupted execution before multi-worker operation is considered proven.
+- A future dedicated Mission Control server is deferred. If implemented later, it is another control-source/enrollment backend rather than something every Vincent worker inherently knows about.
+
+### Supersedes
+
+Earlier assumptions that a fresh Vincent worker inherently knows about Mission Control, automatically enrolls with `Gordonfive/mission-control`, or requires private Mission Control repository access to reach READY.
 
 ## Existing detailed decisions
 
