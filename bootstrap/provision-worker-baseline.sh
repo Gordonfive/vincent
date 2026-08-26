@@ -1,10 +1,23 @@
 #!/bin/sh
 set -eu
 
-status_root=/var/lib/mission-control-install
-### The service account executes the saved Codex installer, while root retains
-### ownership of the installer evidence directory and downloaded artifact.
-install -d -o root -g mission-control -m 0750 "$status_root"
+status_root=/var/lib/vincent-install
+service_user=vincent
+service_home=/var/lib/vincent
+service_config=$service_home/.config
+service_cache=$service_home/.cache
+service_data=$service_home/.local/share
+
+install -d -o root -g "$service_user" -m 0750 "$status_root"
+install -d -o "$service_user" -g "$service_user" -m 0700 \
+    "$service_home" "$service_config" "$service_cache" "$service_data" "$service_home/.local/bin"
+
+service_run() {
+    runuser -u "$service_user" -- env \
+        HOME="$service_home" USER="$service_user" LOGNAME="$service_user" \
+        XDG_CONFIG_HOME="$service_config" XDG_CACHE_HOME="$service_cache" \
+        XDG_DATA_HOME="$service_data" PATH=/usr/local/bin:/usr/bin:/bin "$@"
+}
 
 apt-get update
 apt-get install -y ca-certificates curl gpg jq gh git
@@ -34,32 +47,30 @@ EOF
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin ddev
 systemctl enable --now docker
-usermod -aG docker mission-control
+usermod -aG docker "$service_user"
 
 codex_installer=$status_root/codex-install.sh
 curl --fail --location --proto '=https' --tlsv1.2 https://chatgpt.com/codex/install.sh -o "$codex_installer"
-chown root:mission-control "$codex_installer"
+chown root:"$service_user" "$codex_installer"
 chmod 0750 "$codex_installer"
 sha256sum "$codex_installer" >"$status_root/codex-install.sh.sha256"
-runuser -u mission-control -- env HOME=/var/lib/mission-control sh "$codex_installer"
+service_run sh "$codex_installer"
 
-codex_binary=/var/lib/mission-control/.local/bin/codex
+codex_binary=$service_home/.local/bin/codex
 if [ ! -x "$codex_binary" ]; then
     echo "official Codex installer did not create expected binary" >&2
     exit 1
 fi
-### Do not symlink into the service account's mode-0700 home: the owner must
-### be able to type `vincent` and launch this global CLI from the console.
 install -o root -g root -m 0755 "$codex_binary" /usr/local/bin/codex
 
 docker version
 docker info
 docker run --rm hello-world
-runuser -u mission-control -- docker info
+service_run docker info
 ddev version
 gh --version
 codex --version
-runuser -u nobody -- /usr/local/bin/codex --version
+service_run /usr/local/bin/codex --version
 
 python3 - "$status_root/toolchain.json" <<'PY'
 import json, subprocess, sys
@@ -74,7 +85,7 @@ payload = {
     "ddev": output("ddev", "version"),
     "github_cli": output("gh", "--version").splitlines()[0],
     "codex": output("codex", "--version"),
-    "codex_installer_sha256": Path("/var/lib/mission-control-install/codex-install.sh.sha256").read_text().split()[0],
+    "codex_installer_sha256": Path("/var/lib/vincent-install/codex-install.sh.sha256").read_text().split()[0],
 }
 Path(sys.argv[1]).write_text(json.dumps(payload, sort_keys=True, indent=2) + "\n")
 PY
