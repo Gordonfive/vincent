@@ -1,6 +1,6 @@
 # Vincent Decision Register
 
-**Register updated:** 2026-08-26T13:22:00-08:00
+**Register updated:** 2026-08-26T13:10:00-08:00
 
 This register records owner-approved product and architecture decisions that affect Vincent's design or operation.
 
@@ -193,6 +193,34 @@ Keeping Vincent unaware of a specific private control repository preserves its v
 ### Supersedes
 
 Earlier assumptions that a fresh Vincent worker inherently knows about Mission Control, automatically enrolls with `Gordonfive/mission-control`, or requires private Mission Control repository access to reach READY.
+
+## VINCENT-DEC-007 — Vincent owns system and toolchain maintenance
+
+**Timestamp:** 2026-08-26T13:10:00-08:00  
+**Status:** Accepted
+
+### Decision
+
+Vincent must be able to maintain the complete software environment required for its operation and assigned work. This includes updating the underlying Debian installation, Vincent itself, Vincent runtime dependencies, generic development tools, package-manager metadata, and project-specific tools installed after assignment.
+
+Vincent's self-maintenance capability must not depend on being connected to Mission Control or another control repository. The generic worker must be able to check for and apply appropriate Vincent and operating-system updates while unassigned.
+
+A connected project profile or dependency shopping list may specify required, minimum, maximum, pinned, or otherwise constrained versions of development tools and workload dependencies. Vincent must reconcile those constraints before changing a constrained package. Project version requirements control the task environment, but they do not remove Vincent's responsibility to maintain the underlying operating system and unconstrained components.
+
+### Rationale
+
+A long-lived autonomous worker cannot depend on reinstalling the ISO for routine maintenance or on a human manually maintaining Debian and its toolchain. At the same time, development workloads often require exact versions, so uncontrolled upgrades could break reproducibility or compatibility.
+
+### Consequences
+
+- Vincent requires a privileged maintenance interface capable of package installation, upgrade, removal, repair, repository/key management where necessary, and other bounded system maintenance without granting the normal `vincent` runtime unrestricted sudo.
+- Debian security and package updates, Vincent application updates, and development-tool updates must be diagnosable and report success/failure.
+- Update operations must preserve recoverability and must not silently leave the worker in a partially upgraded READY state.
+- Project profiles must be able to express version constraints for required tools and dependencies.
+- Before upgrading a constrained tool, Vincent must determine whether the proposed version remains compatible with the active project profile; conflicting upgrades are deferred or require explicit project/control-source changes.
+- Unconstrained development tools may be updated under Vincent's normal maintenance policy.
+- Self-check/status output should expose update health and whether maintenance is pending, blocked by version constraints, failed, or complete.
+- Physical and functional testing must prove that an installed worker can update Debian, Vincent, and representative development dependencies without reimaging.
 
 ## Existing detailed decisions
 
