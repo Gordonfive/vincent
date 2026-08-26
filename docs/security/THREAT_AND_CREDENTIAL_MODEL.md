@@ -12,7 +12,7 @@
 ## Primary threats
 
 - Lost or stolen installer media or worker
-- Leaked deploy key, token, or Codex auth cache
+- Leaked deploy key, token, Codex auth cache, or reusable local password
 - Compromised worker or dependency
 - Unauthorized task injection
 - Malicious repository instructions attempting to redefine authority
@@ -22,6 +22,11 @@
 ## Boundaries
 
 - The universal installer contains no permanent owner credential or worker private identity.
+- Installation does not create a human local login account or owner-chosen password.
+- Root is locked before first boot and must remain unusable for local password login.
+- The locked `mission-control` system account is the worker execution identity; it is not a human login account and uses `/usr/sbin/nologin`.
+- Tools that require user state run with explicit service-account `HOME`, `USER`, `LOGNAME`, and XDG paths rather than relying on an interactive login environment.
+- tty1 is a status/dashboard surface and tty2 may host a constrained Codex console; neither is a general shell/login surface.
 - Each installation generates a new worker identity.
 - Enrollment explicitly binds that public identity to approved scope.
 - Workers receive no production credentials by default.
@@ -38,7 +43,8 @@ Fine-grained personal access tokens are not preferred as permanent worker identi
 
 Official documentation currently supports ChatGPT login, device-code login for headless systems, API-key login, enterprise access tokens, and workload identity in applicable environments. Phase 1 must select based on the owner's account/workspace capabilities. Copying `auth.json` is a documented fallback but creates a reusable secret and is not the preferred enrollment design.
 
+Codex authentication state belongs to the worker service identity, not to a human local Linux account. Any interactive Codex console must still run as the locked `mission-control` account and must not imply a reusable local-login credential.
+
 ## Revocation
 
 Revocation must disable one worker without disabling others, prevent new assignments, mark active ownership uncertain, and trigger review of recent remote changes.
-
