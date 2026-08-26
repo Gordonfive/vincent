@@ -1,6 +1,6 @@
 # Vincent Decision Register
 
-**Register updated:** 2026-08-26T13:30:00-08:00
+**Register updated:** 2026-08-26T13:35:00-08:00
 
 This register records owner-approved product and architecture decisions that affect Vincent's design or operation.
 
@@ -47,14 +47,14 @@ Vincent must not force guided partitioning, LVM, whole-disk use, or a fixed part
 **Timestamp:** 2026-08-26T08:20:01-08:00  
 **Status:** Accepted
 
-Every Vincent ISO build has a unique monotonically increasing build number consistently represented in the ISO filename/metadata, USB identity, manifests, checksums, logs, and validation evidence.
+Every Vincent installer image build has a unique monotonically increasing installer build number consistently represented in the ISO filename/metadata, USB identity, manifests, checksums, logs, and validation evidence.
 
 ## VINCENT-DEC-005 — Worker status displays installed build number
 
 **Timestamp:** 2026-08-26T08:30:34-08:00  
-**Status:** Accepted
+**Status:** Superseded by `VINCENT-DEC-009`
 
-The worker status screen visibly displays the installed build number from durable local build metadata.
+The worker status screen displays build identity. `VINCENT-DEC-009` separates installer provenance from current Vincent software identity.
 
 ## VINCENT-DEC-006 — Vincent V1 is control-source agnostic and uses operator-selected Git
 
@@ -75,33 +75,37 @@ Vincent maintains the underlying Debian installation, Vincent itself, runtime de
 **Timestamp:** 2026-08-26T13:30:00-08:00  
 **Status:** Accepted
 
+Installed Vincent workers periodically check the public `Gordonfive/vincent` upstream for approved Vincent software updates and update in place. The ISO remains a bootstrap/recovery/install artifact rather than the routine application upgrade mechanism. Updates use a trusted, validated release channel and preserve recoverability.
+
+Minimum safe self-update belongs in V1.0 if it does not materially delay the core proof; advanced rollout/rollback policy may move to V1.1.
+
+## VINCENT-DEC-009 — Installer build and Vincent software build are separate identities
+
+**Timestamp:** 2026-08-26T13:35:00-08:00  
+**Status:** Accepted
+
 ### Decision
 
-Installed Vincent workers must periodically check the public `Gordonfive/vincent` upstream for Vincent software updates independently of any connected project/control repository. When an approved newer Vincent release/update is available, the worker must be capable of updating its installed Vincent software in place rather than requiring creation and installation of a new ISO.
+Vincent uses two separate build/version identities:
 
-The ISO is a bootstrap/recovery/install artifact, not the routine Vincent application upgrade mechanism. Reimaging remains available for recovery, destructive reset, or changes that cannot safely be delivered in place.
+1. **Installer build number** — identifies the ISO/install media and the installation provenance of a worker. It is immutable for that installed system and does not change when Vincent updates itself in place.
+2. **Vincent software build/version** — identifies the currently installed Vincent application/runtime release. It may advance independently through in-place updates from the public Vincent upstream.
 
-The update mechanism must use an explicitly defined trusted release/update channel rather than blindly executing arbitrary current repository contents. Updates must be identifiable by version/build/release metadata, validated before activation, and leave the worker recoverable if update installation or post-update self-checks fail.
-
-### Release target
-
-This capability belongs in **Version 1.0 if it can be implemented without delaying the core V1 proof materially**. The minimum V1 requirement is a reliable upstream update check plus a safe path to update Vincent itself in place. More advanced unattended rollout policy, staged/canary deployment, rollback orchestration, fleet scheduling, or differential updates may move to **Version 1.1**.
-
-If safe in-place Vincent self-update cannot be completed without materially delaying V1, it becomes a required V1.1 feature rather than weakening V1's safety criteria.
+The two identifiers may initially match or be derived from the same source revision, but they must never be treated as the same lifecycle value.
 
 ### Consequences
 
-- Generic Vincent may know its own public upstream repository/update endpoint even though it must not know any private Mission Control repository by default.
-- Update checks work while the worker is unassigned.
-- Installed Vincent records its current software release/version separately from the immutable original ISO build number where necessary; an in-place software update must not falsely rewrite the historical installation-image identity.
-- Status output should expose current Vincent software version/update state as well as the original installed build identity.
-- Update metadata and artifacts must be authenticated/integrity-checked before privileged installation.
-- Updating Vincent must run post-update self-checks and must not report READY after an incomplete/broken activation.
-- Routine Vincent software updates must not require generating or flashing a fresh ISO.
+- ISO filename, ISO/volume metadata, USB label, installer manifest, installer checksums, and installation provenance use the **installer build number**.
+- Vincent release/update artifacts and update metadata use the **Vincent software build/version**.
+- The worker status screen must display both values clearly, for example `Installer build: 0017` and `Vincent version/build: 1.0.3 / 0042`.
+- In-place Vincent updates change only the Vincent software build/version, not the installer build number.
+- Reports and diagnostics must record both identifiers when relevant.
+- Validation must fail if installer artifacts disagree on installer build identity or if Vincent update artifacts disagree on software build/version identity.
+- Future release tooling may choose semantic versions, monotonic build numbers, commit identifiers, or a combination for Vincent software, but installer and software identities remain distinct.
 
-### Relationship to VINCENT-DEC-007
+### Supersedes
 
-This specifies the authoritative upstream and lifecycle behavior for the Vincent-software portion of the broader maintenance responsibility established by `VINCENT-DEC-007`.
+`VINCENT-DEC-005` to the extent it referred to one ambiguous installed build number, and any wording elsewhere that uses `build number` without distinguishing installer provenance from current Vincent software identity.
 
 ## Existing detailed decisions
 
