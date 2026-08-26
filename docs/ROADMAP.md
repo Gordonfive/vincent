@@ -1,6 +1,6 @@
 # Vincent and Mission Control Roadmap
 
-**Roadmap updated:** 2026-08-26T13:22:00-08:00
+**Roadmap updated:** 2026-08-26T13:10:00-08:00
 
 This roadmap describes the work that remains and the milestones used to judge progress. It intentionally does not duplicate detailed architecture decisions, historical validation evidence, or continuation instructions.
 
@@ -59,12 +59,14 @@ This workstream may proceed separately but remains coordinated through Git.
 11. Verify stable Vincent hostname, networking, generic runtime tooling, Vincent self-checks, diagnostics, status display, update checking, and management access without requiring any Mission Control connection.
 12. Verify the accepted worker Unix identity architecture from `VINCENT-DEC-001`: no required human installer account, dedicated least-privileged `vincent` service identity, no use of `nobody` as the Vincent runtime identity, and separately controlled recovery/admin access.
 13. Verify the worker status screen visibly displays the installed build number from durable local build metadata, as required by `VINCENT-DEC-005`, and that it matches the source image/build records.
-14. Verify the V1 connection workflow from `VINCENT-DEC-006`: the unassigned worker accepts an operator-supplied Git repository URL, supports an interactive/private-repository authentication flow without baked credentials, and records the connected control source locally.
-15. Define and validate a minimal Git control contract containing at least a project/dependency profile, an assignment input, and a report/output location. Project-specific dependencies must be installed after connection rather than assumed to belong in the generic image.
-16. Execute one harmless real bounded task obtained from the connected Git repository, with atomic claim or equivalent safe assignment ownership, isolated work, independent validation, commit/push or other defined report publication, and non-secret result evidence.
-17. Repeat a clean installation to prove reproducibility and publish the physical-test report.
+14. Verify Vincent's self-maintenance capability from `VINCENT-DEC-007`: update Debian, Vincent itself, runtime dependencies, and representative development tools without reimaging; report update health and recover cleanly from failures.
+15. Verify the V1 connection workflow from `VINCENT-DEC-006`: the unassigned worker accepts an operator-supplied Git repository URL, supports an interactive/private-repository authentication flow without baked credentials, and records the connected control source locally.
+16. Define and validate a minimal Git control contract containing at least a project/dependency profile, an assignment input, and a report/output location. Project-specific dependencies must be installed after connection rather than assumed to belong in the generic image.
+17. Verify project profiles can express version constraints for task dependencies and that Vincent respects those constraints during installation and later maintenance.
+18. Execute one harmless real bounded task obtained from the connected Git repository, with atomic claim or equivalent safe assignment ownership, isolated work, independent validation, commit/push or other defined report publication, and non-secret result evidence.
+19. Repeat a clean installation to prove reproducibility and publish the physical-test report.
 
-**Acceptance:** two reproducible fresh installs reach an unassigned READY state without Mission Control or embedded private configuration. A worker can then connect to an operator-selected private Git repository, authenticate interactively, acquire its project profile and assignment, install required project-specific tooling, execute one scoped harmless task, and publish its report. Partition layout remains operator-selected. Every tested image and USB medium is traceable to one build number, and build-number identifiers agree across the image, media, installed worker status screen, manifest/checksums, logs, and reports.
+**Acceptance:** two reproducible fresh installs reach an unassigned READY state without Mission Control or embedded private configuration. A worker can self-maintain Debian, Vincent, and its toolchain; connect to an operator-selected private Git repository; authenticate interactively; acquire its project profile and assignment; install required project-specific tooling with version constraints; execute one scoped harmless task; and publish its report. Partition layout remains operator-selected. Every tested image and USB medium is traceable to one build number, and build-number identifiers agree across the image, media, installed worker status screen, manifest/checksums, logs, and reports.
 
 ## Product milestones
 
@@ -87,5 +89,6 @@ This workstream may proceed separately but remains coordinated through Git.
 - Human judgment remains authoritative for destructive hardware actions, production actions, credential scope, major architecture, and Project DNA changes.
 - Workers are replaceable and least-privileged.
 - Vincent is generic by default; project-specific private control sources are operator-selected after installation.
+- Vincent is responsible for maintaining its Debian base, its own software, runtime dependencies, and development toolchain; active project profiles may constrain versions.
 - Public Vincent content must never expose private project/fleet state or secrets.
 - Durable Git evidence and explicit owner decisions control; chat recency alone does not establish authority.
