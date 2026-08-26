@@ -3,11 +3,13 @@
 **Updated:** 2026-08-26T09:37:00-08:00  
 **Authoritative repository:** `Gordonfive/vincent`  
 **Active branch:** `workstream/iso-decisions-reconcile`  
-**Current source commit:** `eef301e42d37073d43808b4b66090e2bdad492f5`  
+**Current implementation checkpoint:** `eef301e42d37073d43808b4b66090e2bdad492f5`  
 **Current ISO build number:** `0011`  
 **Decision checkpoint:** `2026-08-26T08:30:34-08:00`
 
 This document is the continuation point for a fresh ChatGPT project thread working specifically on Vincent ISO creation and physical installation testing. Git is authoritative; chat history is not required if this document and the required project documents are read first.
+
+The branch tip is expected to be newer than the implementation checkpoint because this handoff and recovery documentation were committed afterward. For the next build, use the current fetched branch tip after reviewing any commits newer than this handoff; do not force the build back to the implementation checkpoint merely to match this document.
 
 ## Required startup sequence
 
@@ -19,8 +21,8 @@ Before making changes or issuing a build:
 4. Read `docs/DECISIONS.md` and refresh any decisions newer than the decision checkpoint above.
 5. Read `docs/ROADMAP.md` if its last-updated timestamp is newer than the last-known roadmap checkpoint.
 6. Read this handoff.
-7. Verify that `workstream/iso-decisions-reconcile` has not advanced beyond the source commit recorded above; if it has, inspect the newer commits before proceeding.
-8. Do not build from an older ISO branch merely because it contains previously tested code.
+7. Inspect commits on `workstream/iso-decisions-reconcile` newer than implementation checkpoint `eef301e42d37073d43808b4b66090e2bdad492f5` so documentation-only handoff commits or later implementation changes are understood.
+8. Build from the current reviewed branch tip, not an older ISO branch.
 
 ## Current branch-consolidation state
 
@@ -107,7 +109,7 @@ This demonstrated that build-number propagation and the live dashboard were func
 
 ## Current untested correction
 
-Commit:
+Implementation checkpoint:
 
 ```text
 eef301e42d37073d43808b4b66090e2bdad492f5
@@ -125,15 +127,16 @@ This correction has **not yet been validated or physically tested** at the time 
 
 ## Immediate next gate
 
-Validate the exact current source commit before rebuilding:
+Validate the current reviewed branch tip, which must contain implementation checkpoint `eef301e42d37073d43808b4b66090e2bdad492f5`:
 
 ```bash
 cd ~/code/vincent
 
 git fetch origin workstream/iso-decisions-reconcile
-git checkout --detach eef301e42d37073d43808b4b66090e2bdad492f5
+git checkout --detach origin/workstream/iso-decisions-reconcile
 
 printf 'HEAD=%s\n' "$(git rev-parse HEAD)"
+git merge-base --is-ancestor eef301e42d37073d43808b4b66090e2bdad492f5 HEAD
 printf 'BUILD_NUMBER='
 cat installer/debian13/BUILD_NUMBER
 
@@ -146,7 +149,7 @@ echo "VALIDATE_EXIT_STATUS=${status}" | tee -a "logs/validate-${TS}.log"
 test "$status" -eq 0
 ```
 
-Expected build number is `0011`. Do not proceed to image creation unless validation exits `0`.
+Expected build number is `0011`. Record the printed HEAD because that exact commit becomes the source commit embedded in the next image. Do not proceed to image creation unless validation exits `0`.
 
 ## Build/inspection procedure after validation
 
@@ -183,7 +186,7 @@ sha256sum "$ISO"
 cat "${ISO}.manifest.json"
 ```
 
-Confirm the manifest records the exact source commit, `build_number: 0011`, `volume_id: VINCENT_B0011`, `service_account: vincent`, interactive Debian partitioning, no human login account, public-Git exact-commit runtime source, persistent console status, tty2 non-root Codex console, and no embedded secrets.
+Confirm the manifest records the exact HEAD used for the build, `build_number: 0011`, `volume_id: VINCENT_B0011`, `service_account: vincent`, interactive Debian partitioning, no human login account, public-Git exact-commit runtime source, persistent console status, tty2 non-root Codex console, and no embedded secrets.
 
 ## USB flashing workflow
 
@@ -239,4 +242,4 @@ At minimum, the next test should prove:
 
 ## Reporting discipline
 
-Every material change should be committed and pushed before another physical image is built. Record the exact commit and build number used for every physical test. Update this handoff whenever the current failure, branch tip, build number, or accepted decision checkpoint changes materially.
+Every material change should be committed and pushed before another physical image is built. Record the exact commit and build number used for every physical test. Update this handoff whenever the current failure, implementation checkpoint, build number, or accepted decision checkpoint changes materially.
