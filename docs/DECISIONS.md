@@ -4,20 +4,26 @@ This register records owner-approved product and architecture decisions that aff
 
 The roadmap describes what remains to be accomplished. Architecture and specification documents describe the resulting system. This register explains consequential choices and why they were made.
 
-## Decision lifecycle
+## Decision lifecycle and authority
 
 - `Accepted` — current decision.
 - `Superseded` — retained for history but replaced by another decision.
 - `Withdrawn` — deliberately abandoned without a direct replacement.
 - `Proposed` — under consideration and not authoritative.
 
+Every decision must carry a full timestamp in ISO 8601 format including UTC offset, for example `2026-08-26T07:50:00-08:00`. A date alone is insufficient.
+
+When two accepted decisions genuinely conflict and neither explicitly supersedes the other, the decision with the later authoritative timestamp controls. Explicit `Supersedes`/`Superseded by` relationships should still be recorded whenever a conflict is known. If timestamps are identical or ordering remains ambiguous, do not guess: require owner clarification and record the resolving decision with a new timestamp.
+
+The timestamp represents when the owner made or explicitly approved the decision, not when a worker happened to edit the file. Git commit timestamps provide additional provenance but do not replace the decision timestamp.
+
 Do not delete an accepted decision merely because the design later changes. Mark it `Superseded` and identify its replacement. Git history remains useful, but the current document must also make the decision chain understandable without reconstructing old commits.
 
-Detailed ADRs may live under `docs/decisions/`. This file is the human-readable index and concise decision history.
+Detailed ADRs may live under `docs/decisions/`. This file is the human-readable index and concise decision history. New ADRs and decision records must follow the same timestamp and conflict-resolution rule.
 
 ## VINCENT-DEC-001 — Worker Unix identity
 
-**Date:** 2026-08-26  
+**Timestamp:** 2026-08-26T07:50:00-08:00  
 **Status:** Accepted
 
 ### Decision
