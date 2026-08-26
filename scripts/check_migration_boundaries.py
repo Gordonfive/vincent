@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -17,21 +18,38 @@ PRIVATE_PATH_PARTS = {"fleet", "assignments", "dispatch", "private-reports", "au
 MARKDOWN_LINK = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 
 
-def text_files(paths):
-    for path in paths:
-        if not path.exists():
-            continue
-        if path.is_file():
+def tracked_files():
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), "ls-files", "-z"],
+        check=True,
+        capture_output=True,
+    )
+    for raw in result.stdout.split(b"\0"):
+        if raw:
+            yield ROOT / raw.decode("utf-8")
+
+
+def active_tracked_files():
+    roots = [path.resolve() for path in ACTIVE_ROOTS]
+    exact = {path.resolve() for path in ACTIVE_FILES}
+    for path in tracked_files():
+        resolved = path.resolve()
+        if resolved in exact:
             yield path
             continue
-        for child in path.rglob("*"):
-            if child.is_file() and ".git" not in child.parts:
-                yield child
+        for root in roots:
+            try:
+                resolved.relative_to(root)
+            except ValueError:
+                continue
+            else:
+                yield path
+                break
 
 
 def check_obsolete_names():
     failures = []
-    for path in text_files(ACTIVE_ROOTS + ACTIVE_FILES):
+    for path in active_tracked_files():
         if path.resolve() == SELF:
             continue
         try:
@@ -46,8 +64,8 @@ def check_obsolete_names():
 
 def check_public_private_boundary():
     failures = []
-    for path in ROOT.rglob("*"):
-        if not path.is_file() or ".git" in path.parts:
+    for path in tracked_files():
+        if not path.is_file():
             continue
         rel = path.relative_to(ROOT)
         if any(part.lower() in PRIVATE_PATH_PARTS for part in rel.parts):
@@ -57,8 +75,8 @@ def check_public_private_boundary():
 
 def check_markdown_links():
     failures = []
-    for path in ROOT.rglob("*.md"):
-        if ".git" in path.parts:
+    for path in tracked_files():
+        if path.suffix.lower() != ".md" or not path.is_file():
             continue
         data = path.read_text(encoding="utf-8")
         for raw in MARKDOWN_LINK.findall(data):
