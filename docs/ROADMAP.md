@@ -15,9 +15,12 @@ Git records what exists. Project DNA records why. This roadmap records the inten
 
 - M0 architecture accepted at `8ed265b05cb9549f2deed43ed8a4612150a496fe`.
 - Legacy implementation includes protocol, claiming, recovery, isolation, validation, publication, enrollment, supervisor, installer, ISO, health, logging, reporting, and tests.
-- Physical testing proved UEFI, full-disk LVM, one root filesystem, stable six-digit hostname, persistent Ethernet, local login, SSH, and Git.
-- First-boot tests found and fixed Python `setuptools.build_meta` isolation and Codex installer/global-executable permission defects.
-- Last legacy image: embedded commit `8a06965f610ceb6a4a7becfdfaae0ce528a7394e`; SHA-256 `485f45a0af366ba86c2daaace0a28edaef368356a1bb52b9b19befc7a6685725`; 108 tests and image inspection passed. It was not flashed after the Vincent split.\n- Workstream 1 implementation and complete native legacy histories are present in Vincent. The integrated tree passes 112 tests and its public/private and credential scans.
+- Physical testing proved UEFI, full-disk LVM, one root filesystem, stable six-digit hostname, persistent Ethernet, and automated first-boot console execution.
+- Workstream 2 physical testing changed the account model: Vincent is an appliance with no human local login account and no owner-chosen username/password. Root is locked before first boot. Runtime work uses the locked `mission-control` system account. See `decisions/ADR-0002-APPLIANCE-ACCOUNTS-AND-CONSOLE.md`.
+- First-boot tests found and fixed Python `setuptools.build_meta` isolation, Codex installer/global-executable permission, DNS/network-readiness, and service-account HOME/XDG environment defects.
+- The first-boot dashboard now exposes fixed critical state plus live work output; tty2 provides an optional non-root interactive Codex console after Codex installation.
+- Last legacy image: embedded commit `8a06965f610ceb6a4a7becfdfaae0ce528a7394e`; SHA-256 `485f45a0af366ba86c2daaace0a28edaef368356a1bb52b9b19befc7a6685725`; 108 tests and image inspection passed. It was not flashed after the Vincent split.
+- Workstream 1 implementation and complete native legacy histories are present in Vincent. The integrated tree passes 112 tests and its public/private and credential scans.
 
 ## Workstream 1 — Repository migration
 
@@ -32,7 +35,9 @@ This workstream must finish before ISO work resumes.
 7. Search for `GitBoy`, `gitboy`, obsolete repository URLs, private details, and secrets. Document every compatibility identifier that remains.
 8. Push the integrated migration branch and verification report with exact commits. Stop before merging Vincent `main`, publishing a release, or deleting legacy repositories.
 
-Status: **Complete pending the final explicit owner acceptance record.** Native histories, integrated implementation, verification report, public/private boundaries, and remaining compatibility identifiers are pushed. Vincent `main` remains untouched.\n\nAcceptance: the owner explicitly accepts one exact commit after the continuation and full roadmap are present on the integration branch.
+Status: **Complete pending the final explicit owner acceptance record.** Native histories, integrated implementation, verification report, public/private boundaries, and remaining compatibility identifiers are pushed. Vincent `main` remains untouched.
+
+Acceptance: the owner explicitly accepts one exact commit after the continuation and full roadmap are present on the integration branch.
 
 ## Workstream 2 — Vincent ISO and physical testing
 
@@ -41,15 +46,19 @@ Start only from the exact accepted Vincent migration commit supplied by Workstre
 1. Build `vincent-debian-13.6.0-amd64.iso` from Vincent, showing progress and saving timestamped output with `tee` and a final exit status.
 2. Run all tests, image inspection, manifest/checksum verification, secret scan, and obsolete-name scan.
 3. Confirm no permanent worker identity, private key, personal credential, reusable enrollment secret, production credential, or fleet-wide credential is embedded.
-4. Identify the USB by exact model, serial, transport, removability, and `/dev/disk/by-id` immediately before any authorized flash.
-5. Fresh-install a disposable workstation using manual disk selection and final confirmation, whole-disk guided LVM, and one root filesystem.
-6. Verify stable `vincent-worker-NNNNNN` hostname, networking after reboot, local login, SSH, Git, GitHub CLI, Docker, DDEV, Codex, Vincent, and Python packaging tools.
-7. On the headless console, require only the command `vincent`; diagnostics and repairs must be automated or performed remotely over SSH.
-8. Verify unique local identity/request generation, explicit scoped enrollment, revocation, and absence of authority before approval.
-9. Execute one harmless real task: atomic claim, isolated work, independent validation, commit, push, and non-secret report.
-10. Repeat a clean install to prove reproducibility and publish the test report for owner acceptance.
+4. Identify the flash target immediately before writing. During current local ISO iteration the owner may use `/dev/sda` for swappable USB media only when an automatic guard confirms it is a whole removable USB disk and has no mounted filesystems.
+5. Fresh-install a disposable workstation using manual physical-disk selection and final destructive confirmation, with guided whole-disk LVM, `vincent-vg`, and the atomic all-files-in-one-filesystem recipe selected automatically.
+6. Do not create a human local account or request an owner username/password. Lock root before first boot. Verify no human UID-range login accounts exist and root remains locked.
+7. Verify stable `vincent-worker-NNNNNN` hostname and networking after reboot. First boot must wait/retry for route, DNS, HTTPS, and exact-commit Git fetch rather than permanently failing on transient network readiness.
+8. Fetch the exact ISO-pinned Vincent commit from the public `Gordonfive/vincent` Git repository as the normal runtime source. Keep the embedded platform archive only as recovery/evidence material.
+9. Run unattended self-tests for SSH, Git, GitHub CLI, Docker, DDEV, Codex, Vincent, Python packaging, account state, identity, Git commit/remote, embedded recovery payload, secrets, and pre-enrollment authority.
+10. tty1 must remain a persistent self-testing/status dashboard with fixed critical information, current task/last error, test results, and live scrolling work output suitable for photographic evidence. No local login or hand-entered diagnostic commands are part of acceptance.
+11. tty2 may provide an optional interactive Codex console after Codex is installed. It runs as the locked `mission-control` service account with an explicit user environment; it is not a root shell or general Linux login.
+12. Verify unique local identity/request generation, explicit scoped enrollment, revocation, and absence of authority before approval.
+13. Execute one harmless real task: atomic claim, isolated work, independent validation, commit, push, and non-secret report.
+14. Repeat a clean install to prove reproducibility and publish the test report for owner acceptance.
 
-Acceptance: two reproducible fresh installs reach READY and one scoped harmless task completes without hand-entered repair commands or embedded secrets.
+Acceptance: two reproducible fresh installs reach READY and one scoped harmless task completes without hand-entered repair commands, human local login credentials, or embedded secrets.
 
 ## Product milestones
 
@@ -72,4 +81,5 @@ Acceptance: two reproducible fresh installs reach READY and one scoped harmless 
 - ChatGPT selects priorities and workers; Mission Control dispatches; workers do not invent product direction.
 - Human approval remains required for destructive actions, production, new credential scope, major architecture, and Project DNA changes.
 - Workers are replaceable and least-privileged.
+- Vincent workers are appliances: no human local login account is required for normal operation.
 - Legacy repositories remain preserved until separately authorized for archival or deletion.
