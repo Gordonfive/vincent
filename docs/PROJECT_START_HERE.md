@@ -1,48 +1,85 @@
 # Project Start Here
 
-Use this file to recover the Vincent / Mission Control project in a completely new ChatGPT or Codex session. Prior chat history and legacy repositories are not required for normal recovery.
+Use this file to recover the Vincent / Mission Control project in a completely new ChatGPT or Codex session. Prior chat history is not required for normal recovery.
 
 ## First actions
 
 1. Connect to and fetch both authoritative repositories:
    - `Gordonfive/vincent`
    - `Gordonfive/mission-control`
-2. Read this file, `AGENTS.md`, `docs/ROADMAP.md`, and `docs/CONTINUATION_HANDOFF.md` in both repositories.
-3. Treat Git evidence and explicit owner decisions as authoritative.
-4. Inspect current reports before beginning a workstream.
+2. In Vincent, read in this order:
+   - `AGENTS.md`
+   - `docs/DECISIONS.md`
+   - `docs/ROADMAP.md`
+   - `docs/CONTINUATION_HANDOFF.md`
+   - `docs/handoffs/ISO_CREATION_HANDOFF_2026-08-26.md` when continuing ISO work
+3. In Mission Control, read its `AGENTS.md`, `docs/PROJECT_START_HERE.md`, roadmap/handoff documents, and current private coordination state as needed.
+4. Treat Git evidence and explicit owner decisions as authoritative.
+5. Inspect current branch tips before acting; `main` may intentionally lag an active validated workstream.
 
 ## Repository roles
 
 - `Gordonfive/vincent` is PUBLIC and owns the generic Vincent worker platform, Debian ISO, installer, first boot, enrollment client, runtime, tests, public-safe documentation, and releases.
 - `Gordonfive/mission-control` is PRIVATE and owns fleet authorization, enrollment approval, inventory, roles, repository scopes, assignments, private coordination, and reports.
-- Historical worker-platform and bootstrap repositories were migration sources only. Their known Git histories are preserved under Vincent `legacy/*` refs and they are not required for project recovery.
+- Historical worker-platform/bootstrap repositories are migration sources whose important histories are preserved in Vincent refs and migration evidence.
 
-## Durable Vincent history
+## Current ISO continuation point
 
-Important accepted/corrective evidence preserved in Git:
+Active branch:
 
-- accepted Workstream 1 source for ISO testing: `fc032f8df1c0abde295122a8a515e9cdcf7c7b70`;
-- durable owner acceptance record: `d6fb92a6a07905dc29a1431b17d2a953abd5fbc8`;
-- Workstream 2 correction code: `3a6abb330fb11faffbd638b101ed11dca47f4216`;
-- Workstream 2 correction/report tip: `4edd5e95a403d605664402a7b1dc2d5c4f53b71b`.
+```text
+workstream/iso-decisions-reconcile
+```
 
-The first ISO built from the accepted source was rejected. Its SHA-256 is:
+Current source commit at the 2026-08-26 ISO handoff:
 
-`bcebd5fed3c82f86c7259b8dd71297e99057f630698c1742e4461265b78842a2`
+```text
+eef301e42d37073d43808b4b66090e2bdad492f5
+```
 
-It must never be flashed. Migration consolidation does not authorize a replacement ISO source.
+Current build number:
 
-## Specification preservation
+```text
+0011
+```
 
-The specification archive under `docs/specification/` preserves Sections 1–260. For Sections 68–92, the owner directed that the latest supplied source is authoritative where it differs: the exact newer Section 68 fragment is preserved and supersedes the conflicting older Section 68; preserved Sections 69–92 remain authoritative because no newer replacement was supplied. The precedence is recorded in `docs/specification/sections-068-092.md`.
+Current decision checkpoint:
+
+```text
+2026-08-26T08:30:34-08:00
+```
+
+Before any build or flash preparation, check `docs/DECISIONS.md` for decisions newer than that checkpoint and reconcile them first.
+
+The exact current physical-test state, known failure, untested correction, validation/build commands, `/dev/sda` lab flashing procedure, and acceptance criteria are in:
+
+```text
+docs/handoffs/ISO_CREATION_HANDOFF_2026-08-26.md
+```
+
+Draft PR #2 consolidates active ISO histories toward `main`. Do not assume `main` contains the current ISO implementation until that PR has been validated and accepted.
+
+## Current ISO design constraints
+
+The authoritative decision register currently requires:
+
+- dedicated non-human `vincent` Unix service account;
+- no conventional human installer username/password requirement;
+- normal Debian interactive disk partitioning, with no Vincent-forced guided/LVM/whole-disk recipe;
+- unique monotonically increasing build numbers;
+- matching build number across ISO filename, ISO/USB media identity, manifests/checksums/evidence, installed metadata, and tty1 status screen;
+- incremental decision refresh before builds.
+
+Do not restore superseded behavior from older ISO branches.
 
 ## Safety boundaries
 
 - Never put private fleet data or secrets in public Vincent.
 - Never commit raw tokens, passwords, private keys, authentication caches, reusable enrollment credentials, or production data to either repository.
-- Do not use the rejected ISO.
-- Migration completion does not authorize ISO flashing, release publication, production/project credentials, worker enrollment, or destructive hardware operations.
+- Do not infer physical-test success from a successful image build alone.
+- Destructive USB writes require verifying the target is the intended removable USB device.
+- During normal physical ISO testing the owner should not need to log into the worker or execute diagnostic commands; the appliance should self-test and present photographically useful diagnostics.
 
 ## Recovery goal
 
-A fresh project connected only to Vincent and Mission Control must be able to determine what the system is, why it exists, what has been completed, what failed, authority boundaries, and exactly how to continue. Migration reports in `docs/reports/` provide preservation and validation evidence.
+A fresh project connected only to Vincent and Mission Control must be able to determine what the system is, current authoritative decisions, active branch and build, what has been tested, the latest failure/correction, authority boundaries, and exactly how to continue without relying on prior chat history.
