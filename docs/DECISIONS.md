@@ -1,6 +1,6 @@
 # Vincent Decision Register
 
-**Register updated:** 2026-08-26T13:10:00-08:00
+**Register updated:** 2026-08-26T13:30:00-08:00
 
 This register records owner-approved product and architecture decisions that affect Vincent's design or operation.
 
@@ -13,216 +13,97 @@ The roadmap describes what remains to be accomplished. Architecture and specific
 - `Withdrawn` — deliberately abandoned without a direct replacement.
 - `Proposed` — under consideration and not authoritative.
 
-Every decision must carry a full timestamp in ISO 8601 format including UTC offset, for example `2026-08-26T07:50:00-08:00`. A date alone is insufficient.
+Every decision must carry a full timestamp in ISO 8601 format including UTC offset. A date alone is insufficient. When accepted decisions conflict, the later authoritative timestamp controls unless explicit supersession resolves the conflict. The timestamp records owner decision/approval time, not merely file-edit time.
 
-When two accepted decisions genuinely conflict and neither explicitly supersedes the other, the decision with the later authoritative timestamp controls. Explicit `Supersedes`/`Superseded by` relationships should still be recorded whenever a conflict is known. If timestamps are identical or ordering remains ambiguous, do not guess: require owner clarification and record the resolving decision with a new timestamp.
-
-The timestamp represents when the owner made or explicitly approved the decision, not when a worker happened to edit the file. Git commit timestamps provide additional provenance but do not replace the decision timestamp.
-
-Do not delete an accepted decision merely because the design later changes. Mark it `Superseded` and identify its replacement. Git history remains useful, but the current document must also make the decision chain understandable without reconstructing old commits.
-
-Detailed ADRs may live under `docs/decisions/`. This file is the human-readable index and concise decision history. New ADRs and decision records must follow the same timestamp and conflict-resolution rule.
+Do not delete superseded decisions. Preserve the decision chain. Detailed ADRs may live under `docs/decisions/`; this file is the concise authoritative register.
 
 ## Incremental refresh rule
 
-Agents should retain the timestamp of the newest authoritative decision they have already incorporated. Before any build, release, flash-preparation step, or other consequential execution, ChatGPT or Codex must refresh the decision register and ingest every decision newer than that remembered timestamp.
-
-Agents do **not** need to re-read older decisions that are already known and whose authoritative timestamps are at or before the agent's recorded decision checkpoint. If the agent has no trustworthy checkpoint, it must read the full current decision set once and establish one.
-
-A build must not proceed from stale decision knowledge. If a newer decision changes build requirements, architecture, safety gates, account behavior, naming, credentials, installer behavior, or acceptance criteria, the build instructions and source must be reconciled first.
+Agents should retain the newest authoritative decision timestamp already incorporated. Before consequential execution, refresh and ingest only newer decisions. If no trustworthy checkpoint exists, read the full current decision set once.
 
 ## VINCENT-DEC-001 — Worker Unix identity
 
 **Timestamp:** 2026-08-26T07:50:00-08:00  
 **Status:** Accepted
 
-### Decision
-
-Vincent workers use a dedicated local `vincent` Unix service account for automation. Vincent does not run as `nobody`, and installation does not require creation of a conventional human login account.
-
-The `vincent` account is created automatically, is non-human, does not permit normal password login, and receives only required filesystem permissions, groups, capabilities, and privileged interfaces. It does not receive unrestricted sudo.
-
-Root is reserved for installer/bootstrap and narrowly controlled system operations. Normal remote root login is disabled. Human administrative/recovery access is separate and optional, provisioned deliberately when required.
-
-### Rationale
-
-A dedicated service identity provides predictable ownership, least-privilege isolation, useful auditing, and clean systemd/service integration. `nobody` is a shared catch-all identity and provides poor ownership and audit semantics. A normal human account would unnecessarily couple unattended appliance operation to interactive credentials.
-
-### Consequences
-
-- The Debian installer must support unattended installation without prompting for an arbitrary human username/password.
-- Runtime files and repositories requiring persistent ownership belong to `vincent` or another explicitly documented system identity.
-- Privileged operations must use narrow root-owned helpers/systemd interfaces rather than broad sudo authority.
-- Interactive troubleshooting must not require converting `vincent` into a normal privileged login account.
-- Recovery/admin authentication requires a separately designed mechanism.
-
-### Supersedes
-
-Earlier implementation assumptions that a normal installer-created user such as `gitboy` or another human account is required for routine worker operation.
+Vincent uses a dedicated, locked, least-privileged `vincent` Unix service account. It does not run as `nobody`; a normal human login account is not required for routine operation. Root and human recovery/admin access remain separately controlled.
 
 ## VINCENT-DEC-002 — Incremental decision refresh before builds
 
 **Timestamp:** 2026-08-26T08:10:43-08:00  
 **Status:** Accepted
 
-### Decision
-
-Before every build, ChatGPT or Codex must check the authoritative decision register for decisions newer than its last-known decision timestamp and incorporate those changes before execution. Previously known decisions do not need to be re-read unless the agent lacks a trustworthy decision checkpoint or a newer decision indicates that earlier material must be revisited.
-
-The roadmap must carry a full last-updated timestamp so an agent can determine whether its roadmap knowledge is stale and refresh only when necessary.
-
-### Rationale
-
-This preserves authoritative owner decisions at build time while avoiding repeated re-reading of unchanged project history. It also gives long-lived agents, new sessions, and concurrent workers an inexpensive freshness check before consequential operations.
-
-### Consequences
-
-- Build workflows need an explicit decision-refresh gate before build execution.
-- Agents should record the newest incorporated decision timestamp in their work logs/handoffs when practical.
-- `docs/ROADMAP.md` must expose an ISO 8601 last-updated timestamp with UTC offset.
-- If the roadmap timestamp is newer than an agent's known roadmap checkpoint, the roadmap must be refreshed before continuing roadmap-directed work.
+Before every build, ChatGPT or Codex checks for decisions newer than its last-known decision timestamp. The roadmap carries a full update timestamp and is refreshed only when newer than the agent's checkpoint.
 
 ## VINCENT-DEC-003 — Installer disk partitioning remains interactive
 
 **Timestamp:** 2026-08-26T08:12:25-08:00  
 **Status:** Accepted
 
-### Decision
-
-Remove Vincent-specific installer code that automatically selects guided partitioning with LVM. Disk configuration must be chosen during installation through the normal Debian installer partitioning workflow and defaults rather than being forced by Vincent automation.
-
-Vincent may provide documentation or recommendations, but it must not preselect guided partitioning, LVM, whole-disk use, a partition recipe, or an equivalent destructive disk-layout choice on behalf of the installer operator.
-
-### Rationale
-
-Disk layout is hardware- and deployment-specific and is sufficiently destructive that the normal installer should present the available choices to the operator. Keeping partition selection interactive also avoids baking one storage policy into a reusable Vincent image.
-
-### Consequences
-
-- Remove any active preseed, installer configuration, scripts, or build logic that force guided partitioning or LVM.
-- ISO validation must confirm that the normal Debian disk-partitioning choice remains available during installation.
-- Physical-install acceptance must no longer require a specific whole-disk or LVM layout unless a later decision explicitly reintroduces one.
-- Destructive device-selection and flashing authorization gates remain separate and unchanged.
-
-### Supersedes
-
-Earlier requirements or implementation assumptions that Vincent automatically selects whole-disk guided partitioning with LVM or a fixed partitioning recipe.
+Vincent must not force guided partitioning, LVM, whole-disk use, or a fixed partition recipe. Disk configuration is selected through the normal Debian installer workflow.
 
 ## VINCENT-DEC-004 — Build numbers identify images and USB media
 
 **Timestamp:** 2026-08-26T08:20:01-08:00  
 **Status:** Accepted
 
-### Decision
-
-Every Vincent ISO build must have a build number. The same build number must be visible in the generated image filename and in the label/identity applied to USB installation media written from that image.
-
-The build number is part of the artifact identity and must remain consistent across the ISO filename, ISO/volume metadata where supported, USB media label/identity, build manifest, checksum records, and validation reports for that build.
-
-### Rationale
-
-A visible build number makes it possible to identify physical media and image files unambiguously, correlate them with validation evidence, and avoid accidentally testing or installing an obsolete image.
-
-### Consequences
-
-- Build tooling must allocate or receive a build number before image creation.
-- ISO filenames must include the build number.
-- Flashing procedures must ensure the written USB is identifiable by the same build number, using filesystem/volume metadata or another durable machine-readable media label supported by the image format.
-- Build manifests, checksums, logs, and physical-test reports must record the build number.
-- Validation must fail if artifact identifiers disagree about the build number.
-- The precise numbering format and allocation mechanism may be implemented separately, but build numbers must be unique and monotonically increasing within the Vincent ISO build sequence.
+Every Vincent ISO build has a unique monotonically increasing build number consistently represented in the ISO filename/metadata, USB identity, manifests, checksums, logs, and validation evidence.
 
 ## VINCENT-DEC-005 — Worker status displays installed build number
 
 **Timestamp:** 2026-08-26T08:30:34-08:00  
 **Status:** Accepted
 
-### Decision
-
-The Vincent worker status screen must display the installed Vincent build number in a clearly visible location.
-
-The displayed build number must come from the installed build metadata and must match the build number associated with the ISO/image from which that worker was installed.
-
-### Rationale
-
-Displaying the build number on the worker itself makes physical and remote troubleshooting easier and allows operators to immediately correlate a running worker with its source image, USB media, manifests, checksums, and validation evidence.
-
-### Consequences
-
-- The build number must survive installation as durable local metadata.
-- The Vincent status screen must render that value.
-- Validation must confirm the displayed worker build number matches the installed build metadata.
-- Physical-test reports must record and verify the build number shown on the worker status screen.
+The worker status screen visibly displays the installed build number from durable local build metadata.
 
 ## VINCENT-DEC-006 — Vincent V1 is control-source agnostic and uses operator-selected Git
 
 **Timestamp:** 2026-08-26T13:22:00-08:00  
 **Status:** Accepted
 
-### Decision
-
-A freshly installed Vincent worker must not know about or depend on `Gordonfive/mission-control` by default. Vincent is a generic worker appliance that boots into a self-contained unassigned state, can run local health/self-checks, and can obtain Vincent software updates independently of any project control repository.
-
-When the operator is ready to assign the worker, Vincent presents a connection/enrollment workflow. The architecture may later support multiple control sources such as ChatGPT, a Git repository, or a dedicated Mission Control server. Version 1 implements the simplest control source: an operator-supplied Git repository URL.
-
-For a private Git repository, Vincent must guide the human through authentication using a supported interactive mechanism such as account login/device authorization, a narrowly scoped connection key/token, OTP-backed authorization, or another credential flow appropriate to the Git host. No private repository credential is baked into the ISO.
-
-After authorization, Vincent reads project-specific instructions from the connected repository. Those instructions may include a project profile or dependency 'shopping list' describing software and configuration needed for that workload, such as DDEV, Drupal, language runtimes, or other tools not required by generic Vincent.
-
-The V1 Git control contract must include at minimum:
-
-- an assignment input that tells the worker what work to perform; and
-- a report/output location where the worker records the result of that work.
-
-Additional files or directories may be defined as needed for project configuration, dependency profiles, state, validation evidence, locking/claiming, or coordination.
-
-### Rationale
-
-Keeping Vincent unaware of a specific private control repository preserves its value as a reusable generic worker and prevents project-specific/private configuration from leaking into the public image. A Git-backed V1 provides durable coordination using infrastructure already available without requiring a separate server application before the worker concept is proven.
-
-### Consequences
-
-- Remove any default/bootstrap assumption that Vincent automatically contacts `Gordonfive/mission-control` or any other project-specific private repository.
-- Generic Vincent must remain useful before assignment: boot, networking, self-checks, diagnostics, status display, and Vincent update checks must work without enrollment.
-- Project-specific packages such as DDEV or Drupal tooling are not generic-image requirements unless separately justified; they may be installed after connection according to the selected repository's project profile.
-- The Git repository URL and authentication state become part of local worker enrollment/configuration after the operator explicitly connects the worker.
-- Repository credentials must be scoped as narrowly as practical and stored using an appropriate protected local mechanism.
-- The Git assignment/report protocol must be documented and made safe for retry, concurrent workers, and interrupted execution before multi-worker operation is considered proven.
-- A future dedicated Mission Control server is deferred. If implemented later, it is another control-source/enrollment backend rather than something every Vincent worker inherently knows about.
-
-### Supersedes
-
-Earlier assumptions that a fresh Vincent worker inherently knows about Mission Control, automatically enrolls with `Gordonfive/mission-control`, or requires private Mission Control repository access to reach READY.
+Fresh Vincent does not know about or depend on a private Mission Control repository. It reaches an unassigned READY state independently. V1 lets the operator supply and authenticate to a Git repository, from which Vincent obtains a project/dependency profile, assignment input, and report/output location. Dedicated Mission Control server software is deferred.
 
 ## VINCENT-DEC-007 — Vincent owns system and toolchain maintenance
 
 **Timestamp:** 2026-08-26T13:10:00-08:00  
 **Status:** Accepted
 
+Vincent maintains the underlying Debian installation, Vincent itself, runtime dependencies, generic development tools, and project-specific tooling. Active project profiles may impose version constraints that Vincent must honor when maintaining task environments.
+
+## VINCENT-DEC-008 — Public Vincent repository is the upstream self-update source
+
+**Timestamp:** 2026-08-26T13:30:00-08:00  
+**Status:** Accepted
+
 ### Decision
 
-Vincent must be able to maintain the complete software environment required for its operation and assigned work. This includes updating the underlying Debian installation, Vincent itself, Vincent runtime dependencies, generic development tools, package-manager metadata, and project-specific tools installed after assignment.
+Installed Vincent workers must periodically check the public `Gordonfive/vincent` upstream for Vincent software updates independently of any connected project/control repository. When an approved newer Vincent release/update is available, the worker must be capable of updating its installed Vincent software in place rather than requiring creation and installation of a new ISO.
 
-Vincent's self-maintenance capability must not depend on being connected to Mission Control or another control repository. The generic worker must be able to check for and apply appropriate Vincent and operating-system updates while unassigned.
+The ISO is a bootstrap/recovery/install artifact, not the routine Vincent application upgrade mechanism. Reimaging remains available for recovery, destructive reset, or changes that cannot safely be delivered in place.
 
-A connected project profile or dependency shopping list may specify required, minimum, maximum, pinned, or otherwise constrained versions of development tools and workload dependencies. Vincent must reconcile those constraints before changing a constrained package. Project version requirements control the task environment, but they do not remove Vincent's responsibility to maintain the underlying operating system and unconstrained components.
+The update mechanism must use an explicitly defined trusted release/update channel rather than blindly executing arbitrary current repository contents. Updates must be identifiable by version/build/release metadata, validated before activation, and leave the worker recoverable if update installation or post-update self-checks fail.
 
-### Rationale
+### Release target
 
-A long-lived autonomous worker cannot depend on reinstalling the ISO for routine maintenance or on a human manually maintaining Debian and its toolchain. At the same time, development workloads often require exact versions, so uncontrolled upgrades could break reproducibility or compatibility.
+This capability belongs in **Version 1.0 if it can be implemented without delaying the core V1 proof materially**. The minimum V1 requirement is a reliable upstream update check plus a safe path to update Vincent itself in place. More advanced unattended rollout policy, staged/canary deployment, rollback orchestration, fleet scheduling, or differential updates may move to **Version 1.1**.
+
+If safe in-place Vincent self-update cannot be completed without materially delaying V1, it becomes a required V1.1 feature rather than weakening V1's safety criteria.
 
 ### Consequences
 
-- Vincent requires a privileged maintenance interface capable of package installation, upgrade, removal, repair, repository/key management where necessary, and other bounded system maintenance without granting the normal `vincent` runtime unrestricted sudo.
-- Debian security and package updates, Vincent application updates, and development-tool updates must be diagnosable and report success/failure.
-- Update operations must preserve recoverability and must not silently leave the worker in a partially upgraded READY state.
-- Project profiles must be able to express version constraints for required tools and dependencies.
-- Before upgrading a constrained tool, Vincent must determine whether the proposed version remains compatible with the active project profile; conflicting upgrades are deferred or require explicit project/control-source changes.
-- Unconstrained development tools may be updated under Vincent's normal maintenance policy.
-- Self-check/status output should expose update health and whether maintenance is pending, blocked by version constraints, failed, or complete.
-- Physical and functional testing must prove that an installed worker can update Debian, Vincent, and representative development dependencies without reimaging.
+- Generic Vincent may know its own public upstream repository/update endpoint even though it must not know any private Mission Control repository by default.
+- Update checks work while the worker is unassigned.
+- Installed Vincent records its current software release/version separately from the immutable original ISO build number where necessary; an in-place software update must not falsely rewrite the historical installation-image identity.
+- Status output should expose current Vincent software version/update state as well as the original installed build identity.
+- Update metadata and artifacts must be authenticated/integrity-checked before privileged installation.
+- Updating Vincent must run post-update self-checks and must not report READY after an incomplete/broken activation.
+- Routine Vincent software updates must not require generating or flashing a fresh ISO.
+
+### Relationship to VINCENT-DEC-007
+
+This specifies the authoritative upstream and lifecycle behavior for the Vincent-software portion of the broader maintenance responsibility established by `VINCENT-DEC-007`.
 
 ## Existing detailed decisions
 
-- `docs/decisions/ADR-0001-CODEX-EXEC.md` — existing Codex execution ADR. Retain as a detailed ADR; reconcile/index its decision here when that architecture is next reviewed.
-- `docs/decisions/WORKSTREAM_1_ACCEPTANCE.md` — acceptance evidence rather than a general architecture decision; retain as durable workstream evidence.
+- `docs/decisions/ADR-0001-CODEX-EXEC.md` — existing Codex execution ADR; retain and reconcile when next reviewed.
+- `docs/decisions/WORKSTREAM_1_ACCEPTANCE.md` — durable workstream acceptance evidence.
