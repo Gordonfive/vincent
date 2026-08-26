@@ -86,6 +86,21 @@ This is the second primary task and may run in a separate thread, coordinated th
 
 Acceptance: two reproducible fresh installs reach READY and one scoped harmless task completes without embedded secrets or hand-entered repair steps.
 
+## Worker operating-system identity architecture
+
+Vincent workers are appliances, not conventional multi-user workstations. Installation must not require the owner to invent a normal username or password merely to satisfy the Debian installer.
+
+- Create a dedicated local `vincent` Unix service account automatically. Do not run Vincent as `nobody` and do not use a normal human account as the automation identity.
+- The `vincent` account owns Vincent runtime state, work directories, repositories, and other files that require persistent ownership. Vincent services run under this identity.
+- The `vincent` account is non-human and should not permit normal password login. It receives only the groups, filesystem permissions, capabilities, and privileged operations actually required.
+- Do not grant `vincent` unrestricted sudo. Privileged operations should use narrowly scoped root-owned helpers or systemd units with explicit interfaces and validation.
+- Root remains reserved for installer/bootstrap and tightly controlled system operations. Normal remote root login should be disabled.
+- A conventional human administrative account is optional rather than an installation requirement. If enabled for physical recovery or interactive CLI troubleshooting, it remains separate from the Vincent automation identity and follows an explicit authentication policy.
+- The preferred default installation is therefore: **no required human login account, an automatically created locked `vincent` service account, and deliberately provisioned recovery/admin access when needed.**
+- Interactive Vincent/Codex troubleshooting must not require weakening the service account or permanently granting broad privileges. Recovery mechanisms should preserve least privilege and auditable separation between automated and human actions.
+
+Acceptance: an unattended fresh installation reaches operational state without prompting for a human username/password; Vincent runs under its dedicated least-privileged identity; `nobody` is not used as the Vincent runtime identity; and administrative recovery remains possible through a separately controlled mechanism.
+
 ## Product milestones
 
 | Milestone | Outcome | Status |
