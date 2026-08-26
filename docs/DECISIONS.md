@@ -1,6 +1,6 @@
 # Vincent Decision Register
 
-**Register updated:** 2026-08-26T13:35:00-08:00
+**Register updated:** 2026-08-26T13:40:00-08:00
 
 This register records owner-approved product and architecture decisions that affect Vincent's design or operation.
 
@@ -13,13 +13,11 @@ The roadmap describes what remains to be accomplished. Architecture and specific
 - `Withdrawn` — deliberately abandoned without a direct replacement.
 - `Proposed` — under consideration and not authoritative.
 
-Every decision must carry a full timestamp in ISO 8601 format including UTC offset. A date alone is insufficient. When accepted decisions conflict, the later authoritative timestamp controls unless explicit supersession resolves the conflict. The timestamp records owner decision/approval time, not merely file-edit time.
-
-Do not delete superseded decisions. Preserve the decision chain. Detailed ADRs may live under `docs/decisions/`; this file is the concise authoritative register.
+Every decision must carry a full timestamp in ISO 8601 format including UTC offset. When accepted decisions conflict, the later authoritative timestamp controls unless explicit supersession resolves the conflict. Do not delete superseded decisions.
 
 ## Incremental refresh rule
 
-Agents should retain the newest authoritative decision timestamp already incorporated. Before consequential execution, refresh and ingest only newer decisions. If no trustworthy checkpoint exists, read the full current decision set once.
+Agents retain the newest authoritative decision timestamp already incorporated. Before consequential execution, refresh and ingest only newer decisions. If no trustworthy checkpoint exists, read the full current decision set once.
 
 ## VINCENT-DEC-001 — Worker Unix identity
 
@@ -84,28 +82,39 @@ Minimum safe self-update belongs in V1.0 if it does not materially delay the cor
 **Timestamp:** 2026-08-26T13:35:00-08:00  
 **Status:** Accepted
 
-### Decision
+Vincent uses two lifecycle identities: immutable **installer build number** for ISO/media/install provenance, and independently advancing **Vincent software version/build** for the currently installed application/runtime. The status screen, reports, validation, and release tooling distinguish them.
 
-Vincent uses two separate build/version identities:
+## VINCENT-DEC-010 — Network installer can fetch current Vincent release
 
-1. **Installer build number** — identifies the ISO/install media and the installation provenance of a worker. It is immutable for that installed system and does not change when Vincent updates itself in place.
-2. **Vincent software build/version** — identifies the currently installed Vincent application/runtime release. It may advance independently through in-place updates from the public Vincent upstream.
+**Timestamp:** 2026-08-26T13:40:00-08:00  
+**Status:** Proposed
 
-The two identifiers may initially match or be derived from the same source revision, but they must never be treated as the same lifecycle value.
+### Proposal
 
-### Consequences
+Add a Debian-netinstall-like Vincent installation path. When network connectivity is available, the installer may contact the trusted public Vincent release channel associated with `Gordonfive/vincent`, retrieve the current approved Vincent software release, validate it, and install that release instead of being limited to the Vincent software payload bundled when the USB/ISO installer was created.
 
-- ISO filename, ISO/volume metadata, USB label, installer manifest, installer checksums, and installation provenance use the **installer build number**.
-- Vincent release/update artifacts and update metadata use the **Vincent software build/version**.
-- The worker status screen must display both values clearly, for example `Installer build: 0017` and `Vincent version/build: 1.0.3 / 0042`.
-- In-place Vincent updates change only the Vincent software build/version, not the installer build number.
-- Reports and diagnostics must record both identifiers when relevant.
-- Validation must fail if installer artifacts disagree on installer build identity or if Vincent update artifacts disagree on software build/version identity.
-- Future release tooling may choose semantic versions, monotonic build numbers, commit identifiers, or a combination for Vincent software, but installer and software identities remain distinct.
+The installer retains an offline/base path using its bundled validated Vincent payload so installation and recovery do not depend absolutely on GitHub or Internet availability.
 
-### Supersedes
+The network installer must fetch a published/approved release artifact or signed/validated release manifest. It must not blindly clone and execute arbitrary current `main` contents.
 
-`VINCENT-DEC-005` to the extent it referred to one ambiguous installed build number, and any wording elsewhere that uses `build number` without distinguishing installer provenance from current Vincent software identity.
+### Intended lifecycle
+
+- The **installer build number** continues to identify the USB/ISO and remains unchanged.
+- The **Vincent software version/build** installed during network installation may be newer than the version originally bundled with that installer build.
+- After installation, the normal Vincent self-updater from `VINCENT-DEC-008` maintains the application.
+- Old but still-compatible USB installers therefore remain useful without constant reimaging merely because Vincent application software has advanced.
+
+### Proposed release target
+
+Version 1.1. This feature is not required to prove the V1.0 worker architecture because V1.0 already provides installation plus in-place Vincent updating. It may be promoted into V1.0 only if implementation is low-risk and does not delay the core V1 proof.
+
+### Safety requirements before acceptance
+
+- authenticated/integrity-checked release metadata and payload;
+- explicit compatibility contract between installer build/base Debian environment and fetched Vincent release;
+- deterministic fallback to the bundled offline payload when network retrieval fails or the remote release is incompatible;
+- clear status/reporting of both installer build and actually installed Vincent software version/build;
+- no dependency on private Mission Control state or credentials.
 
 ## Existing detailed decisions
 
