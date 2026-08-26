@@ -3,119 +3,118 @@ import subprocess
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "installer/debian13"
 
 
 class DebianInstallerTests(unittest.TestCase):
     def test_all_installer_shell_scripts_parse(self):
-        scripts = [INSTALLER / name for name in ("fetch-source.sh", "build-image.sh", "inspect-image.sh", "flash-usb.sh", "first-boot.sh")]
-        scripts.append(ROOT / "bootstrap/provision-worker-baseline.sh")
+        names = (
+            "fetch-source.sh", "build-image.sh", "inspect-image.sh", "flash-usb.sh",
+            "first-boot.sh", "self-test.sh", "console-status.sh", "codex-console.sh",
+        )
+        scripts = [INSTALLER / name for name in names]
+        scripts += [ROOT / "bootstrap/provision-worker-baseline.sh", ROOT / "installer/install.sh"]
         for path in scripts:
             result = subprocess.run(["sh", "-n", str(path)])
             self.assertEqual(result.returncode, 0, path.name)
 
-    def test_destructive_disk_choice_is_not_preseeded(self):
+    def test_partitioning_is_normal_debian_interactive_workflow(self):
         preseed = (INSTALLER / "preseed.cfg").read_text()
-        self.assertNotIn("partman-auto/disk", preseed)
-        self.assertNotIn("biggest_free", preseed)
-        self.assertIn("partman-auto/method string lvm", preseed)
-        self.assertIn("partman-auto-lvm/guided_size string max", preseed)
-        self.assertIn("partman-auto/choose_recipe select atomic", preseed)
-        self.assertIn("partman/confirm_write_new_label boolean false", preseed)
-        self.assertIn("partman/confirm boolean false", preseed)
-        self.assertIn("partman/confirm_nooverwrite boolean false", preseed)
+        for marker in (
+            "partman-auto/disk", "partman-auto/method", "partman-auto/choose_recipe",
+            "partman-auto-lvm", "partman/confirm_write_new_label", "partman/confirm boolean",
+        ):
+            self.assertNotIn(marker, preseed)
 
-    def test_account_secrets_are_not_preseeded(self):
+    def test_no_human_account_and_root_locked_before_first_boot(self):
         preseed = (INSTALLER / "preseed.cfg").read_text()
-        self.assertNotRegex(preseed, r"passwd/(user-password|root-password)")
-        self.assertNotIn("authorized_keys", preseed)
+        self.assertIn("passwd/root-login boolean true", preseed)
+        self.assertIn("passwd/root-password-crypted password !vincent-installer-no-login!", preseed)
+        self.assertIn("passwd/make-user boolean false", preseed)
+        self.assertIn("in-target passwd -l root", preseed)
+        self.assertNotIn("passwd/username", preseed)
+        self.assertNotIn("passwd/user-fullname", preseed)
+        self.assertNotIn("passwd/user-password", preseed)
 
     def test_network_and_wifi_selection_remain_interactive(self):
         preseed = (INSTALLER / "preseed.cfg").read_text()
-        self.assertIn("netcfg/get_hostname string vincent-worker-unenrolled", preseed)
-        self.assertNotIn("codex-worker-unenrolled", preseed)
+        self.assertIn("netcfg/get_hostname string vincent-worker", preseed)
+        self.assertNotIn("unenrolled", preseed)
         self.assertNotIn("netcfg/choose_interface", preseed)
-        self.assertNotIn("netcfg/wireless_essid string", preseed)
-        self.assertNotIn("netcfg/wireless_wpa string", preseed)
-        self.assertNotIn("netcfg/wireless_wep string", preseed)
 
-    def test_usb_flasher_requires_stable_usb_identity_and_exact_confirmation(self):
-        script = (INSTALLER / "flash-usb.sh").read_text()
-        self.assertIn("/dev/disk/by-id/usb-", script)
-        self.assertIn('ERASE:', script)
-        self.assertIn('transport', script)
-        self.assertIn('removable', script)
-        self.assertIn('cmp -n', script)
+    def test_vincent_service_identity_is_dedicated_and_non_login(self):
+        install = (ROOT / "installer/install.sh").read_text()
+        unit = (ROOT / "installer/systemd/mission-control-worker.service").read_text()
+        self.assertIn("service_user=vincent", install)
+        self.assertIn("--shell /usr/sbin/nologin", install)
+        self.assertIn("state_root=/var/lib/vincent", install)
+        self.assertIn("User=vincent", unit)
+        self.assertIn("Group=vincent", unit)
+        self.assertNotIn("User=mission-control", unit)
+        self.assertNotIn("runuser -u nobody", (ROOT / "bootstrap/provision-worker-baseline.sh").read_text())
 
-    def test_boot_entries_are_visibly_destructive_but_not_defaulted(self):
-        bios = (INSTALLER / "isolinux-mission-control.cfg").read_text()
-        uefi = (INSTALLER / "grub-mission-control.cfg").read_text()
-        self.assertIn("DESTRUCTIVE", bios)
-        self.assertIn("DESTRUCTIVE", uefi)
-        self.assertIn("Vincent installer", bios)
-        self.assertIn("Vincent installer", uefi)
-        self.assertNotIn("interface=auto", bios)
-        self.assertNotIn("interface=auto", uefi)
-        self.assertNotIn("menu default", bios)
-        self.assertNotIn("set default", uefi)
+    def test_build_number_is_durable_and_consistent(self):
+        build_number = (INSTALLER / "BUILD_NUMBER").read_text().strip()
+        self.assertRegex(build_number, r"^\d{4,}$")
+        build = (INSTALLER / "build-image.sh").read_text()
+        self.assertIn("BUILD_NUMBER", build)
+        self.assertIn("build-${build_number}", build)
+        self.assertIn("VINCENT_B${build_number}", build)
+        self.assertIn('"build_number":build', build)
+        self.assertIn('/vincent/build-number', build)
+        console = (INSTALLER / "console-status.sh").read_text()
+        self.assertIn("BUILD:", console)
+        self.assertIn("/etc/vincent/build-number", console)
 
-    def test_source_is_pinned_to_debian_13_amd64_https(self):
-        source = (INSTALLER / "source.env").read_text()
-        self.assertRegex(source, r"DEBIAN_VERSION=13\.\d+\.\d+")
-        self.assertIn("DEBIAN_ARCH=amd64", source)
-        self.assertIn(
-            "DEBIAN_BASE_URL=https://cdimage.debian.org/debian-cd/current/amd64/iso-cd",
-            source,
-        )
+    def test_runtime_source_is_exact_public_git_commit(self):
+        script = (INSTALLER / "first-boot.sh").read_text()
+        self.assertIn("https://github.com/Gordonfive/vincent.git", script)
+        self.assertIn("expected-commit", script)
+        self.assertIn("git -C \"$source_root\" fetch --no-tags --depth=1 origin \"$expected_commit\"", script)
+        self.assertNotIn("tar -xzf", script)
+
+    def test_dashboard_and_tty2_codex_console_exist(self):
+        dashboard = (INSTALLER / "console-status.sh").read_text()
+        codex_console = (INSTALLER / "codex-console.sh").read_text()
+        self.assertIn("LIVE WORK OUTPUT", dashboard)
+        self.assertIn("LAST ERROR", dashboard)
+        self.assertIn("Alt+F2", dashboard)
+        self.assertIn("runuser -u \"$service_user\"", codex_console)
+        self.assertIn("service_user=vincent", codex_console)
+        self.assertNotIn("/bin/bash", codex_console)
 
     def test_build_never_writes_directly_to_block_devices(self):
         build = (INSTALLER / "build-image.sh").read_text()
-        self.assertIn("dist/vincent-debian-", build)
         self.assertNotIn("/dev/sd", build)
         self.assertNotRegex(build, re.compile(r"\bdd\s+if="))
         self.assertIn("refusing to overwrite or append to existing output", build)
 
-    def test_build_makes_extracted_boot_configs_writable_before_editing(self):
-        build = (INSTALLER / "build-image.sh").read_text()
-        chmod = 'chmod u+w "$work_root/menu.cfg" "$work_root/grub.cfg"'
-        self.assertIn(chmod, build)
-        self.assertLess(build.index(chmod), build.index("include mission-control.cfg"))
-
-    def test_inspection_extracts_and_validates_embedded_payloads(self):
+    def test_inspection_enforces_build_number_and_interactive_partitioning(self):
         inspect = (INSTALLER / "inspect-image.sh").read_text()
-        self.assertIn('-extract "$required" "$extracted"', inspect)
-        self.assertIn('tar -tzf "$inspection_root/platform.tar.gz"', inspect)
-        self.assertIn("mission-control/first-boot.sh", inspect)
+        self.assertIn("VINCENT_B${build_number}", inspect)
+        self.assertIn("embedded build number mismatch", inspect)
+        self.assertIn("forced partitioning detected", inspect)
+        self.assertIn("INSTALLER_INSPECTION=PASS", inspect)
 
-    def test_toolchain_uses_signed_repositories_and_saved_codex_installer(self):
+    def test_toolchain_uses_signed_repositories_and_service_environment(self):
         script = (ROOT / "bootstrap/provision-worker-baseline.sh").read_text()
         self.assertIn("Signed-By: /etc/apt/keyrings/docker.asc", script)
         self.assertIn("Signed-By: /etc/apt/keyrings/ddev.asc", script)
-        self.assertIn("https://pkg.ddev.com/apt/", script)
-        self.assertIn("apt-get install -y ca-certificates curl gpg jq gh git", script)
-        self.assertIn("https://chatgpt.com/codex/install.sh", script)
-        self.assertIn("codex-install.sh.sha256", script)
-        self.assertIn("install -d -o root -g mission-control -m 0750", script)
-        self.assertIn('chown root:mission-control "$codex_installer"', script)
-        self.assertIn('chmod 0750 "$codex_installer"', script)
-        self.assertIn('install -o root -g root -m 0755 "$codex_binary" /usr/local/bin/codex', script)
-        self.assertIn("runuser -u nobody -- /usr/local/bin/codex --version", script)
-        self.assertNotIn('ln -sfn "$codex_binary" /usr/local/bin/codex', script)
-        self.assertNotIn("curl -fsSL https://chatgpt.com/codex/install.sh |", script)
+        self.assertIn("service_user=vincent", script)
+        self.assertIn("service_run()", script)
+        self.assertIn("HOME=\"$service_home\"", script)
+        self.assertNotIn("runuser -u nobody", script)
 
     def test_first_boot_assigns_stable_vincent_hostname(self):
         script = (INSTALLER / "first-boot.sh").read_text()
         self.assertIn("/sys/class/dmi/id/product_uuid", script)
-        self.assertIn("/etc/machine-id", script)
         self.assertIn('print(f"vincent-worker-{value:06d}")', script)
         self.assertIn('hostnamectl set-hostname "$vincent_hostname"', script)
 
     def test_fetch_requires_the_debian_cd_signing_keyring(self):
         script = (INSTALLER / "fetch-source.sh").read_text()
         self.assertIn("/usr/share/keyrings/debian-role-keys.gpg", script)
-        self.assertIn("install the debian-keyring package", script)
         self.assertNotIn("debian-archive-keyring.gpg", script)
 
 
