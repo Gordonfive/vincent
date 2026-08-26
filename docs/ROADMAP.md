@@ -1,6 +1,6 @@
 # Vincent and Mission Control Roadmap
 
-**Roadmap updated:** 2026-08-26T08:12:25-08:00
+**Roadmap updated:** 2026-08-26T08:20:01-08:00
 
 This roadmap describes the work that remains and the milestones used to judge progress. It intentionally does not duplicate detailed architecture decisions, historical validation evidence, or continuation instructions.
 
@@ -48,18 +48,20 @@ This workstream may proceed separately but remains coordinated through Git.
 1. Before every build, compare the agent's last-known decision timestamp with `docs/DECISIONS.md`. Ingest all newer authoritative decisions before proceeding. If no trustworthy decision checkpoint exists, read the full current decision set once and establish one.
 2. Refresh this roadmap only when its `Roadmap updated` timestamp is newer than the agent's recorded roadmap checkpoint.
 3. Establish one exact authorized ISO source commit containing all accepted migration and corrective work.
-4. Build the Vincent Debian ISO from that exact source. Long-running commands must display progress and save complete timestamped output with `tee`, preserve pipeline exit status, and print an explicit final status.
-5. Run full repository tests, source ISO signature/checksum verification, image inspection, manifest/checksum verification, embedded-commit verification, secret/credential scanning, identity-file scanning, and active obsolete-name scanning.
-6. Confirm the ISO contains no permanent worker identity, private key, personal credential, reusable enrollment secret, production credential, fleet-wide credential, or private fleet configuration.
-7. Before flashing, apply the project's exact-device destructive-authorization gate.
-8. Fresh-install a disposable workstation. Disk partitioning must be chosen interactively through the normal Debian installer workflow as required by `VINCENT-DEC-003`; Vincent must not force guided partitioning, LVM, whole-disk use, or a fixed partition recipe.
-9. Verify stable Vincent hostname, networking, required development/runtime tooling, Vincent runtime, and management access.
-10. Verify the accepted worker Unix identity architecture from `VINCENT-DEC-001`: no required human installer account, dedicated least-privileged `vincent` service identity, no use of `nobody` as the Vincent runtime identity, and separately controlled recovery/admin access.
-11. Verify fresh local identity/request generation, no authority before approval, explicit scoped enrollment, revocation, and clean recovery.
-12. Execute one harmless real bounded task with atomic claim, isolated work, independent validation, commit, push, and non-secret report.
-13. Repeat a clean installation to prove reproducibility and publish the physical-test report.
+4. Assign a unique monotonically increasing Vincent ISO build number before image creation, as required by `VINCENT-DEC-004`.
+5. Build the Vincent Debian ISO from that exact source. The ISO filename and supported ISO/volume metadata must include the build number. Long-running commands must display progress and save complete timestamped output with `tee`, preserve pipeline exit status, and print an explicit final status.
+6. Run full repository tests, source ISO signature/checksum verification, image inspection, manifest/checksum verification, embedded-commit verification, secret/credential scanning, identity-file scanning, active obsolete-name scanning, and build-number consistency validation.
+7. Confirm the ISO contains no permanent worker identity, private key, personal credential, reusable enrollment secret, production credential, fleet-wide credential, or private fleet configuration.
+8. Before flashing, apply the project's exact-device destructive-authorization gate.
+9. When an ISO is written to USB media, ensure the USB's durable machine-readable label/identity exposes the same build number as the source image. Record that build number in flashing logs and physical-test evidence.
+10. Fresh-install a disposable workstation. Disk partitioning must be chosen interactively through the normal Debian installer workflow as required by `VINCENT-DEC-003`; Vincent must not force guided partitioning, LVM, whole-disk use, or a fixed partition recipe.
+11. Verify stable Vincent hostname, networking, required development/runtime tooling, Vincent runtime, and management access.
+12. Verify the accepted worker Unix identity architecture from `VINCENT-DEC-001`: no required human installer account, dedicated least-privileged `vincent` service identity, no use of `nobody` as the Vincent runtime identity, and separately controlled recovery/admin access.
+13. Verify fresh local identity/request generation, no authority before approval, explicit scoped enrollment, revocation, and clean recovery.
+14. Execute one harmless real bounded task with atomic claim, isolated work, independent validation, commit, push, and non-secret report.
+15. Repeat a clean installation to prove reproducibility and publish the physical-test report.
 
-**Acceptance:** two reproducible fresh installs reach READY and one scoped harmless task completes without embedded secrets or hand-entered repair steps. Partition layout is operator-selected through the normal installer and is not an acceptance constraint unless a later decision explicitly makes it one.
+**Acceptance:** two reproducible fresh installs reach READY and one scoped harmless task completes without embedded secrets or hand-entered repair steps. Partition layout is operator-selected through the normal installer and is not an acceptance constraint unless a later decision explicitly makes it one. Every tested image and USB medium is traceable to one build number, and build-number identifiers agree across the image, media, manifest/checksums, logs, and reports.
 
 ## Product milestones
 
