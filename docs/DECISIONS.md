@@ -1,6 +1,6 @@
 # Vincent Decision Register
 
-**Register updated:** 2026-08-26T08:10:43-08:00
+**Register updated:** 2026-08-26T08:12:25-08:00
 
 This register records owner-approved product and architecture decisions that affect Vincent's design or operation.
 
@@ -81,6 +81,32 @@ This preserves authoritative owner decisions at build time while avoiding repeat
 - Agents should record the newest incorporated decision timestamp in their work logs/handoffs when practical.
 - `docs/ROADMAP.md` must expose an ISO 8601 last-updated timestamp with UTC offset.
 - If the roadmap timestamp is newer than an agent's known roadmap checkpoint, the roadmap must be refreshed before continuing roadmap-directed work.
+
+## VINCENT-DEC-003 — Installer disk partitioning remains interactive
+
+**Timestamp:** 2026-08-26T08:12:25-08:00  
+**Status:** Accepted
+
+### Decision
+
+Remove Vincent-specific installer code that automatically selects guided partitioning with LVM. Disk configuration must be chosen during installation through the normal Debian installer partitioning workflow and defaults rather than being forced by Vincent automation.
+
+Vincent may provide documentation or recommendations, but it must not preselect guided partitioning, LVM, whole-disk use, a partition recipe, or an equivalent destructive disk-layout choice on behalf of the installer operator.
+
+### Rationale
+
+Disk layout is hardware- and deployment-specific and is sufficiently destructive that the normal installer should present the available choices to the operator. Keeping partition selection interactive also avoids baking one storage policy into a reusable Vincent image.
+
+### Consequences
+
+- Remove any active preseed, installer configuration, scripts, or build logic that force guided partitioning or LVM.
+- ISO validation must confirm that the normal Debian disk-partitioning choice remains available during installation.
+- Physical-install acceptance must no longer require a specific whole-disk or LVM layout unless a later decision explicitly reintroduces one.
+- Destructive device-selection and flashing authorization gates remain separate and unchanged.
+
+### Supersedes
+
+Earlier requirements or implementation assumptions that Vincent automatically selects whole-disk guided partitioning with LVM or a fixed partitioning recipe.
 
 ## Existing detailed decisions
 
