@@ -30,6 +30,8 @@ state = status.get("state", "BOOTSTRAPPING")
 step = status.get("step", "starting")
 hostname = status.get("hostname", report.get("hostname", "vincent-worker"))
 overall = report.get("overall", "PENDING")
+if state == "FAILED":
+    overall = "FAIL"
 fingerprint = enrollment.get("fingerprint", "pending")
 worker_id = enrollment.get("worker_id", "pending")
 checks = report.get("checks", [])
@@ -38,6 +40,12 @@ attempt = status.get("attempt", 0)
 maximum = status.get("max_attempts", 0)
 width = max(80, shutil.get_terminal_size((120, 40)).columns)
 height = max(24, shutil.get_terminal_size((120, 40)).lines)
+try:
+    lines = log_path.read_text(errors="replace").splitlines()
+except Exception:
+    lines = []
+nonempty = [line for line in lines if line.strip()]
+last_error = nonempty[-1] if nonempty else status.get("detail", "pending")
 
 print("\033[2J\033[H", end="")
 print("VINCENT WORKER")
@@ -51,13 +59,15 @@ print(f"ROUTE: {status.get('default_route') or 'pending'}")
 print(f"GITHUB DNS: {status.get('github_dns', 'pending')}")
 if maximum:
     print(f"RETRY: {attempt}/{maximum}")
-if status.get("detail"):
-    print(f"DETAIL: {status['detail']}")
+print("-" * min(width, 100))
+print(f"CURRENT TASK: {status.get('detail') or step}")
+if state == "FAILED" or overall == "FAIL":
+    print(f"LAST ERROR:   {last_error[:max(0, width-14)]}")
 print("-" * min(width, 100))
 
 if checks:
     print("SELF-TEST STATUS")
-    for item in checks[:12]:
+    for item in checks[:10]:
         result = "PASS" if item.get("ok") else "FAIL"
         detail = str(item.get("detail", "")).replace("\n", " ")
         print(f"{item.get('name', 'unknown'):<28} {result:<4} {detail[:max(0, width-40)]}")
@@ -69,7 +79,7 @@ elif state == "FAILED" or overall == "FAIL":
     print("INSTALLATION / SELF-TEST FAILURE")
     if failed:
         print("FAILED CHECKS:")
-        for item in failed[:8]:
+        for item in failed[:6]:
             print(f"- {item.get('name', 'unknown')}: {str(item.get('detail', ''))[:max(0, width-6)]}")
     print("Photograph this screen; no local login is required.")
 else:
@@ -80,12 +90,8 @@ print("Alt+F1: return to this dashboard")
 print("-" * min(width, 100))
 print("LIVE WORK OUTPUT")
 
-reserved = 18 + min(len(checks), 12)
-log_lines = max(6, height - reserved)
-try:
-    lines = log_path.read_text(errors="replace").splitlines()
-except Exception:
-    lines = []
+reserved = 20 + min(len(checks), 10)
+log_lines = max(8, height - reserved)
 for line in lines[-log_lines:]:
     print(line[:width])
 PY
