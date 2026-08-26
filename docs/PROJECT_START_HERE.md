@@ -9,25 +9,34 @@
 5. `protocols/WORKER_PROTOCOL_V1.md`
 6. `protocols/SCHEMAS_V1.md`
 7. `operations/RECOVERY_MODEL.md`
-8. `CONTINUATION_HANDOFF.md`\n9. `ROADMAP.md`
+8. `decisions/ADR-0001-CODEX-EXEC.md`
+9. `decisions/ADR-0002-APPLIANCE-ACCOUNTS-AND-CONSOLE.md`
+10. `CONTINUATION_HANDOFF.md`
+11. `ROADMAP.md`
 
 ## Current state
 
-- Phase: Vincent repository migration complete; physical M1/M3 proof pending
+- Phase: Workstream 2 Vincent ISO physical testing and appliance hardening
+- Active ISO branch: `workstream/iso-self-test-console`
 - Running workers: none
 - Coordinator: not implemented
 - Production authority: none
-- Destructive-test authority: none
 - Public repository: `Gordonfive/vincent`
 - Private fleet control: `Gordonfive/mission-control`
-- Workstream 1: complete pending explicit owner acceptance of one exact commit\n- Next gate: owner acceptance of the integration-branch commit containing the full roadmap, continuation handoff, and verification report
+- Migration: complete enough for accepted Workstream 2 ISO testing; legacy repositories remain preserved
+- Current installer policy: no human login account, no owner username/password, root locked before first boot, manual disk selection and final destructive confirmation only
+- Local console policy: tty1 persistent Vincent dashboard; tty2 optional non-root Codex console as locked `mission-control` service account
+- Runtime source: exact ISO-pinned commit fetched from public Vincent Git; embedded archive is recovery/evidence only
+- Next gate: validate the exact current ISO branch tip, rebuild/inspect, then repeat physical installation until the unattended appliance reaches READY
 
 ## Durable-state locations
 
 - Intent: `project-dna/`
 - Architecture and authority: `architecture/`
+- Decisions: `decisions/`
 - Schemas and state machines: `protocols/`
 - Security: `security/`
 - Recovery and operations: `operations/`
 - Original specification: `specification/`
-- Implementation order: `ROADMAP.md`\n- Current continuation state: `CONTINUATION_HANDOFF.md`
+- Implementation order and gates: `ROADMAP.md`
+- Current continuation state: `CONTINUATION_HANDOFF.md`
