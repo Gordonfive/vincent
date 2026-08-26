@@ -8,6 +8,19 @@
 4. **Execution environment:** task-specific Git worktree and project-local/containerized tooling.
 5. **Codex:** invoked through a supported noninteractive interface; not used for deterministic local steps that the supervisor can perform directly.
 
+## Appliance execution surface
+
+Vincent workers are appliances rather than general-purpose interactive Linux hosts.
+
+- No human local login account is required or created for normal operation.
+- Root is locked before first boot.
+- The locked `mission-control` system account is the local execution identity for worker and Codex activity.
+- tty1 is reserved for the persistent Vincent status/dashboard surface.
+- tty2 may provide an optional interactive Codex console running as `mission-control`; it is not a root shell or general login prompt.
+- Tools requiring per-user state receive an explicit service-account HOME/USER/LOGNAME/XDG environment.
+
+This account and console model is recorded in `../decisions/ADR-0002-APPLIANCE-ACCOUNTS-AND-CONSOLE.md`.
+
 ## Codex interface decision
 
 The initial supervisor target is `codex exec`, because current official documentation marks it stable for scripted noninteractive runs, supports JSONL event output, and supports resuming a saved exec session. Phase 1 must verify actual installed-version behavior, exit codes, session IDs, failure events, and usage-limit signals before relying on automatic resumption.
@@ -27,4 +40,3 @@ The experimental app server may be evaluated later; it is not the Phase 1 depend
 ## Replacement property
 
 Loss of a worker must cost only reconstructable cache, local logs, worker-specific credentials, and at most bounded unpushed progress. Loss of the coordinator must not lose tasks, reports, decisions, or intent.
-
