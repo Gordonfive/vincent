@@ -7,11 +7,23 @@ service_config=$service_home/.config
 service_cache=$service_home/.cache
 service_data=$service_home/.local/share
 
+service_run() {
+    runuser -u mission-control -- env \
+        HOME="$service_home" \
+        USER=mission-control \
+        LOGNAME=mission-control \
+        XDG_CONFIG_HOME="$service_config" \
+        XDG_CACHE_HOME="$service_cache" \
+        XDG_DATA_HOME="$service_data" \
+        PATH=/usr/local/bin:/usr/bin:/bin \
+        "$@"
+}
+
 ### The service account executes the saved Codex installer, while root retains
 ### ownership of the installer evidence directory and downloaded artifact.
 install -d -o root -g mission-control -m 0750 "$status_root"
 install -d -o mission-control -g mission-control -m 0700 \
-    "$service_home" "$service_config" "$service_cache" "$service_data"
+    "$service_home" "$service_config" "$service_cache" "$service_data" "$service_home/.local/bin"
 
 apt-get update
 apt-get install -y ca-certificates curl gpg jq gh git
@@ -48,15 +60,7 @@ curl --fail --location --proto '=https' --tlsv1.2 https://chatgpt.com/codex/inst
 chown root:mission-control "$codex_installer"
 chmod 0750 "$codex_installer"
 sha256sum "$codex_installer" >"$status_root/codex-install.sh.sha256"
-runuser -u mission-control -- env \
-    HOME="$service_home" \
-    USER=mission-control \
-    LOGNAME=mission-control \
-    XDG_CONFIG_HOME="$service_config" \
-    XDG_CACHE_HOME="$service_cache" \
-    XDG_DATA_HOME="$service_data" \
-    PATH=/usr/local/bin:/usr/bin:/bin \
-    sh "$codex_installer"
+service_run sh "$codex_installer"
 
 codex_binary=$service_home/.local/bin/codex
 if [ ! -x "$codex_binary" ]; then
@@ -70,22 +74,11 @@ install -o root -g root -m 0755 "$codex_binary" /usr/local/bin/codex
 docker version
 docker info
 docker run --rm hello-world
-runuser -u mission-control -- docker info
+service_run docker info
 ddev version
 gh --version
 codex --version
-### Verify Codex as the actual runtime service identity. Do not use `nobody`:
-### that account deliberately has no usable home directory and is not a Vincent
-### runtime identity.
-runuser -u mission-control -- env \
-    HOME="$service_home" \
-    USER=mission-control \
-    LOGNAME=mission-control \
-    XDG_CONFIG_HOME="$service_config" \
-    XDG_CACHE_HOME="$service_cache" \
-    XDG_DATA_HOME="$service_data" \
-    PATH=/usr/local/bin:/usr/bin:/bin \
-    /usr/local/bin/codex --version
+service_run /usr/local/bin/codex --version
 
 python3 - "$status_root/toolchain.json" <<'PY'
 import json, subprocess, sys
