@@ -1,6 +1,6 @@
 # Vincent and Mission Control Roadmap
 
-**Roadmap updated:** 2026-08-26T08:10:43-08:00
+**Roadmap updated:** 2026-08-26T08:12:25-08:00
 
 This roadmap describes the work that remains and the milestones used to judge progress. It intentionally does not duplicate detailed architecture decisions, historical validation evidence, or continuation instructions.
 
@@ -52,14 +52,14 @@ This workstream may proceed separately but remains coordinated through Git.
 5. Run full repository tests, source ISO signature/checksum verification, image inspection, manifest/checksum verification, embedded-commit verification, secret/credential scanning, identity-file scanning, and active obsolete-name scanning.
 6. Confirm the ISO contains no permanent worker identity, private key, personal credential, reusable enrollment secret, production credential, fleet-wide credential, or private fleet configuration.
 7. Before flashing, apply the project's exact-device destructive-authorization gate.
-8. Fresh-install a disposable workstation using the intended whole-disk installation layout.
+8. Fresh-install a disposable workstation. Disk partitioning must be chosen interactively through the normal Debian installer workflow as required by `VINCENT-DEC-003`; Vincent must not force guided partitioning, LVM, whole-disk use, or a fixed partition recipe.
 9. Verify stable Vincent hostname, networking, required development/runtime tooling, Vincent runtime, and management access.
 10. Verify the accepted worker Unix identity architecture from `VINCENT-DEC-001`: no required human installer account, dedicated least-privileged `vincent` service identity, no use of `nobody` as the Vincent runtime identity, and separately controlled recovery/admin access.
 11. Verify fresh local identity/request generation, no authority before approval, explicit scoped enrollment, revocation, and clean recovery.
 12. Execute one harmless real bounded task with atomic claim, isolated work, independent validation, commit, push, and non-secret report.
 13. Repeat a clean installation to prove reproducibility and publish the physical-test report.
 
-**Acceptance:** two reproducible fresh installs reach READY and one scoped harmless task completes without embedded secrets or hand-entered repair steps.
+**Acceptance:** two reproducible fresh installs reach READY and one scoped harmless task completes without embedded secrets or hand-entered repair steps. Partition layout is operator-selected through the normal installer and is not an acceptance constraint unless a later decision explicitly makes it one.
 
 ## Product milestones
 
