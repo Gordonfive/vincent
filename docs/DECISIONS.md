@@ -1,6 +1,6 @@
 # Vincent Decision Register
 
-**Register updated:** 2026-08-26T08:12:25-08:00
+**Register updated:** 2026-08-26T08:20:01-08:00
 
 This register records owner-approved product and architecture decisions that affect Vincent's design or operation.
 
@@ -107,6 +107,30 @@ Disk layout is hardware- and deployment-specific and is sufficiently destructive
 ### Supersedes
 
 Earlier requirements or implementation assumptions that Vincent automatically selects whole-disk guided partitioning with LVM or a fixed partitioning recipe.
+
+## VINCENT-DEC-004 — Build numbers identify images and USB media
+
+**Timestamp:** 2026-08-26T08:20:01-08:00  
+**Status:** Accepted
+
+### Decision
+
+Every Vincent ISO build must have a build number. The same build number must be visible in the generated image filename and in the label/identity applied to USB installation media written from that image.
+
+The build number is part of the artifact identity and must remain consistent across the ISO filename, ISO/volume metadata where supported, USB media label/identity, build manifest, checksum records, and validation reports for that build.
+
+### Rationale
+
+A visible build number makes it possible to identify physical media and image files unambiguously, correlate them with validation evidence, and avoid accidentally testing or installing an obsolete image.
+
+### Consequences
+
+- Build tooling must allocate or receive a build number before image creation.
+- ISO filenames must include the build number.
+- Flashing procedures must ensure the written USB is identifiable by the same build number, using filesystem/volume metadata or another durable machine-readable media label supported by the image format.
+- Build manifests, checksums, logs, and physical-test reports must record the build number.
+- Validation must fail if artifact identifiers disagree about the build number.
+- The precise numbering format and allocation mechanism may be implemented separately, but build numbers must be unique and monotonically increasing within the Vincent ISO build sequence.
 
 ## Existing detailed decisions
 
