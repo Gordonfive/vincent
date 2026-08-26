@@ -28,7 +28,7 @@ fi
 
 install -d -o root -g root -m 0755 "$install_root"
 install -d -o root -g "$service_user" -m 0750 "$configuration_root"
-install -d -o "$service_user" -g "$service_user" -m 0700 "$state_root" "$state_root/identity"
+install -d -o "$service_user" -g "$service_user" -m 0700 "$state_root" "$state_root/identity" "$state_root/.config" "$state_root/.cache" "$state_root/.local" "$state_root/.local/share"
 install -d -o "$service_user" -g "$service_user" -m 0750 "$workspace_root" "$workspace_root/worktrees"
 
 ### Debian installs the reviewed build backend as python3-setuptools. Make that
@@ -55,7 +55,16 @@ if [ -e "$state_root/identity/identity.json" ]; then
     exit 3
 fi
 
-runuser -u "$service_user" -- \
+### mission-control is a locked appliance service account, not a login user.
+### Give enrollment the same deterministic runtime environment used by Codex.
+runuser -u "$service_user" -- env \
+    HOME="$state_root" \
+    USER="$service_user" \
+    LOGNAME="$service_user" \
+    XDG_CONFIG_HOME="$state_root/.config" \
+    XDG_CACHE_HOME="$state_root/.cache" \
+    XDG_DATA_HOME="$state_root/.local/share" \
+    PATH=/usr/local/bin:/usr/bin:/bin \
     "$install_root/venv/bin/mission-control-worker" \
     --identity-root "$state_root/identity" enroll
 
