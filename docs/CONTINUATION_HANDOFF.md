@@ -22,11 +22,13 @@ The active ISO branch is:
 workstream/iso-decisions-reconcile
 ```
 
-Current source tip at this handoff:
+Current implementation checkpoint:
 
 ```text
 eef301e42d37073d43808b4b66090e2bdad492f5
 ```
+
+The actual branch tip is newer because handoff/recovery documentation was committed afterward. A new session must fetch the branch, review newer commits, and validate/build from the current reviewed branch tip rather than forcing HEAD back to the implementation checkpoint.
 
 Current build number:
 
@@ -63,7 +65,7 @@ Current accepted design includes:
 - tty2 optional non-root Codex console;
 - monotonically increasing build numbers propagated through ISO/media/manifest/installed worker status.
 
-The latest physical build `0011` successfully displayed build number, source commit, network state, worker identity and live output, but failed in the service-account toolchain stage with a HOME/login-context error. Commit `eef301e42d37073d43808b4b66090e2bdad492f5` is the current untested correction.
+The latest physical build `0011` successfully displayed build number, source commit, network state, worker identity and live output, but failed in the service-account toolchain stage with a HOME/login-context error. Implementation checkpoint `eef301e42d37073d43808b4b66090e2bdad492f5` contains the current untested correction.
 
 See `docs/handoffs/ISO_CREATION_HANDOFF_2026-08-26.md` for the exact failure, correction, validation/build commands, `/dev/sda` lab flashing workflow, and physical-test acceptance criteria.
 
