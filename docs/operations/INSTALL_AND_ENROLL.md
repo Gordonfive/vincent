@@ -1,49 +1,56 @@
-# Install and Enroll a Disposable Worker
+# Install and Authorize a Vincent Worker
 
-This procedure stages software and generates a new identity. It does not authorize the worker or start unattended operation.
+This procedure stages Vincent and creates a local installation identity. Staging does not grant private project authority or start unattended task execution.
 
 ## Preconditions
 
-- Linux host with Python 3.11 or newer, Git, OpenSSH client tools, and systemd.
-- A locally verified checkout of the public `Gordonfive/vincent` platform repository.
-- Console or other trusted access to compare the generated fingerprint.
-- No operational project credential embedded in the checkout or installer.
+- Debian-compatible host with the dependencies required by the selected Vincent release.
+- Verified checkout or approved Vincent release payload.
+- Trusted console/management access for reviewing the generated identity and diagnostics.
+- No private project credential embedded in the installer or source payload.
 
 ## Staging
 
-Run the installer as root and provide the absolute verified checkout path:
+For a verified source checkout, the current installer entry point is:
 
 ```text
 sudo ./installer/install.sh /absolute/path/to/vincent
 ```
 
-The installer creates the locked `mission-control` service account, isolated state/workspace directories, a Python virtual environment, example configuration, and a disabled systemd unit. It then generates a unique Ed25519 installation identity and prints the public enrollment request.
+The installer creates the dedicated locked `vincent` service identity, protected state/workspace directories, the Vincent environment, example configuration where applicable, and a locally generated installation identity. It must not silently authorize the worker or grant access to a private project/control repository.
 
-## Initial trust
+Some internal service/configuration identifiers still use earlier `mission-control` implementation names. These are compatibility/implementation debt tracked separately; they do not mean a fresh Vincent installation depends on the Mission Control product.
 
-Initial trust is established only when the owner compares the enrollment request fingerprint through a trusted channel and deliberately authorizes that specific `worker_id`. Merely possessing the installer or creating a request grants no repository access.
+## Generic READY state
 
-After approval, an enrollment authority supplies narrowly scoped operational authorization outside Git. The approval record may be committed, but private keys, tokens, and Codex credentials must not be committed.
+Before private project/control configuration, Vincent should be able to:
 
-## Activation gate
+1. complete local first-boot provisioning;
+2. run self-tests and diagnostics;
+3. report installer provenance and current Vincent software identity;
+4. verify required local/network capabilities;
+5. reach an unassigned READY state.
 
-Before enabling the service:
+## Project/control authorization
 
-1. Replace example values in `/etc/mission-control/worker.toml`.
-2. Install approved per-worker Git authorization through the selected secret-delivery mechanism.
-3. Complete supported Codex authentication for the service account.
-4. Run `mission-control-worker --config /etc/mission-control/worker.toml doctor`.
-5. Confirm the reported worker ID and all readiness checks.
-6. Enable the service only after owner approval is durable.
+When the operator assigns the worker:
 
-The current M1 unit is a readiness oneshot, not an autonomous task loop.
+1. Select the approved Git project/control source.
+2. Authenticate using a unique, narrowly scoped, revocable credential appropriate to that source.
+3. Verify the source/repository identity and allowed scope.
+4. Load the project profile, dependency constraints, assignment and report location.
+5. Complete AI-provider authentication separately; do not place provider credentials in Git.
+6. Run the applicable readiness/doctor checks.
+7. Enable task execution only after required authorization and checks pass.
+
+Mission Control may provide these private control functions in a deployment, but it is not the only possible source and is not required for generic READY.
 
 ## Reinstallation and recovery
 
-The installer refuses to reuse an existing identity. Do not delete evidence automatically. Decide explicitly whether this is:
+Do not silently reuse an unexpected existing installation identity. Explicitly classify the situation as:
 
-- recovery of the same authorized installation, using a separately documented protected backup;
-- replacement by a new identity followed by revocation of the old worker; or
-- forensic preservation of an unexpected installation state.
+- recovery of the same authorized installation using protected recovery material;
+- replacement by a new identity followed by revocation/retirement of the old identity; or
+- preservation of unexpected state for diagnosis.
 
-Replacement is the default disposable-worker path.
+Replacement with a newly generated identity is the normal disposable-worker path unless an approved recovery procedure applies.
