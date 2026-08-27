@@ -31,7 +31,7 @@ Do not depend on historical chat, permanent handoff files, retired product-inten
 
 ## Repository boundary
 
-Vincent is public/reusable worker software. It contains installer/ISO tooling, first boot/runtime, worker status/diagnostics/network recovery, update/maintenance logic, Git/project connection, AI-provider adapters, tests, public-safe docs and releases.
+Vincent is reusable worker software intended for later public/open-source release. Development currently remains private under ADR-0014 until an explicit public-release gate is approved. The repository contains installer/ISO tooling, first boot/runtime, worker status/diagnostics/network recovery, update/maintenance logic, Git/project connection, AI-provider adapters, tests, public-release-safe docs and releases.
 
 Mission Control is a separate optional fleet control plane. Worker-local packages/services/paths must use Vincent-local terminology; reserve `Mission Control` for the actual control-plane product/integration surface.
 
