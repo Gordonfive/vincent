@@ -29,7 +29,7 @@ Before changing product behavior, understand the canonical documents in `docs/RE
 - Operations: `docs/operations/`
 - Protocol contracts: `docs/protocols/`
 
-Do not recreate permanent handoff, project-start, planned-feature, Project DNA, or migration-archive documents.
+Do not recreate permanent handoff, project-start, planned-feature, retired product-intent, or migration-archive documents.
 
 ## Requirement and ADR identifiers
 
