@@ -1,0 +1,27 @@
+[Unit]
+Description=Vincent rootless container namespace bootstrap
+Before=mission-control-worker.service
+
+[Service]
+Type=oneshot
+User=vincent
+Group=vincent
+RuntimeDirectory=vincent
+RuntimeDirectoryMode=0700
+Environment=HOME=/var/lib/vincent
+Environment=USER=vincent
+Environment=LOGNAME=vincent
+Environment=XDG_CONFIG_HOME=/var/lib/vincent/.config
+Environment=XDG_CACHE_HOME=/var/lib/vincent/.cache
+Environment=XDG_DATA_HOME=/var/lib/vincent/.local/share
+Environment=XDG_RUNTIME_DIR=/run/vincent
+ExecStart=/usr/bin/podman unshare /bin/true
+RemainAfterExit=yes
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/vincent /run/vincent
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
