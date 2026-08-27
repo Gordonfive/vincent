@@ -7,6 +7,7 @@ service_home=/var/lib/vincent
 service_config=$service_home/.config
 service_cache=$service_home/.cache
 service_data=$service_home/.local/share
+# Canonical preserved Codex runtime: /opt/vincent-codex/bin/codex
 codex_root=/opt/vincent-codex
 
 # systemd services do not guarantee a login-style root environment.
