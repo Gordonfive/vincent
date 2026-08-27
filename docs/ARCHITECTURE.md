@@ -2,25 +2,32 @@
 
 ## Components
 
-| Component | Repository | Responsibility |
+| Component | Repository/source | Responsibility |
 |---|---|---|
-| Vincent | `Gordonfive/vincent` | Public installer, enrollment client, worker runtime, health and reporting |
-| Mission Control | `Gordonfive/mission-control` | Private fleet authorization, policy, assignments, and fleet reports |
-| Project repositories | Project-owned | Product DNA, source, project rules, tasks, tests, and reports |
+| Vincent | `Gordonfive/vincent` | Public installer, first boot, worker runtime, self-tests, diagnostics, updates, Git connection/execution, health, and reporting |
+| Project/control repository | Operator-selected Git source | Project profile, dependency constraints, assignment input, project rules, tests, and report/output location |
+| Mission Control | `Gordonfive/mission-control` | Optional private fleet enrollment, authorization, inventory, scopes, assignments, and fleet reporting |
+
+Mission Control is not a boot-time or READY-state dependency. Vincent must remain useful with an operator-selected project/control repository and no dedicated Mission Control service.
 
 ## Worker lifecycle
 
-1. Build a reproducible Vincent ISO.
-2. Install Debian without embedded credentials.
-3. Generate a stable worker identifier and unique keypair locally.
-4. Produce a public enrollment request.
-5. Await explicit owner approval.
-6. Receive narrowly scoped repository access.
-7. Fetch Mission Control policy and a bounded assignment.
-8. Read the assigned project's authority chain.
-9. Claim, execute, test, publish, report, and stop.
-10. Permit suspension or revocation without rebuilding the fleet.
+1. Build and validate a reproducible Vincent installer.
+2. Install Debian without embedded private credentials or permanent worker identity.
+3. Create the dedicated least-privileged `vincent` service identity and generate installation identity locally.
+4. Run self-tests and diagnostics and reach an unassigned READY state.
+5. Allow the operator to select and authenticate an appropriate Git project/control source.
+6. Load the selected source's project profile, dependency constraints, assignment, and authority boundaries.
+7. Prepare an isolated workspace and required constrained tooling.
+8. Safely claim a bounded task when claiming is required.
+9. Execute, validate, commit, push, and publish a report.
+10. Stop at the assignment boundary; completion does not imply integration, release, production, or destructive authority.
+11. Maintain Debian, Vincent, and the permitted toolchain without requiring routine reimaging.
 
-## VS Code
+## Authority boundary
 
-VS Code or VSCodium may be installed as an optional human interface. It may expose worker status, logs, tests, and project workspaces. Mission Control must not depend on VS Code, and a headless Vincent worker must retain full functionality.
+Public Vincent defines generic safety and runtime behavior. Private project/control sources may narrow scope or add task-specific requirements but cannot weaken Vincent, host, credential, or owner security boundaries.
+
+## Human interface
+
+Vincent must be fully operable headlessly. Local status/diagnostic consoles are part of the appliance interface. VS Code or VSCodium may be installed as an optional development interface, but core worker operation must not depend on either.
