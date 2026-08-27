@@ -1,6 +1,6 @@
 # Vincent and Mission Control Roadmap
 
-**Roadmap updated:** 2026-08-27T08:18:00-08:00
+**Roadmap updated:** 2026-08-27T08:26:00-08:00
 
 This roadmap describes remaining work and milestones. Detailed decisions are in `docs/DECISIONS.md`; agreed but unscheduled ideas are in `docs/PLANNED_FEATURES.md`; historical validation evidence belongs in `docs/reports/`; continuation state belongs in `docs/CONTINUATION_HANDOFF.md`.
 
@@ -14,6 +14,19 @@ Agents retain the newest roadmap and decision timestamps incorporated and refres
 | `Gordonfive/mission-control` | Currently private project/control repository and future Mission Control control-plane implementation area. Mission Control is planned as a self-hostable server application with web UI and authenticated API for enrollment, fleet state, authorization, assignments, leases, approvals, and reporting. Fresh Vincent remains independently functional and does not require Mission Control. |
 
 Mission Control's reusable application source is intended to become public if/when it becomes a distributable Vincent product. Our private deployment/fleet state must remain separate from public application source.
+
+## Current physical-development strategy
+
+The large workstation is the first persistent development worker. Bring its existing Vincent installation fully online as a usable worker as soon as practical, then use it together with ChatGPT/GitHub to begin Mission Control development.
+
+The old laptop is the disposable physical-test target for ongoing Vincent and installer development. Repeated installer builds, networking changes, first-boot changes, destructive reinstall tests, failure-path tests, and worker-replacement experiments should preferentially use the laptop so the large workstation remains available for useful work.
+
+Do not reinstall the large workstation merely to keep installer testing symmetric with the laptop. Reinstall it later only when a specific acceptance test requires proving that a working worker can be destroyed and reconstructed from durable state, or when another test genuinely requires clean-machine reproduction on that hardware.
+
+This creates two explicit roles:
+
+- **Large workstation:** persistent first worker, Mission Control development worker, real bounded-work test subject, and later recovery/impermanence acceptance target.
+- **Old laptop:** expendable Vincent/installer test machine for frequent clean installs and destructive physical testing.
 
 ## Primary Workstream A — Complete consolidation and retire legacy repositories
 
@@ -29,22 +42,26 @@ Mission Control's reusable application source is intended to become public if/wh
 
 ## Primary Workstream B — Vincent 1.0 installer and worker proof
 
-1. Refresh newer decisions/roadmap state before every build.
-2. Establish one exact authorized ISO source commit.
-3. Assign the next unique monotonically increasing **installer build number**.
-4. Build and validate the ISO with matching installer-build identity across ISO filename/metadata, USB label, installer manifests/checksums, logs, reports, and durable installation provenance.
-5. Preserve normal interactive Debian disk partitioning; Vincent does not force a storage layout.
-6. Fresh-install a disposable workstation and prove generic unassigned READY operation: networking, stable identity, self-checks, diagnostics, status, and management access.
-7. Prove the dedicated least-privileged `vincent` service identity and separately controlled privileged/recovery interfaces.
-8. Prove the status screen clearly distinguishes the immutable original **installer build number** from the current **Vincent software version/build**.
-9. Prove Debian/system maintenance and representative development-tool maintenance without reimaging.
-10. Implement safe public-upstream Vincent self-update in V1 if it does not materially delay the core proof. Updating Vincent changes only the software identity, never installer provenance.
-11. Prove the V1 operator-selected Git connection workflow: repository URL entry, interactive authentication, local connection state, project/dependency profile, assignment input, and report/output location.
-12. Prove project profiles can constrain dependency versions and that Vincent respects those constraints during installation and maintenance.
-13. Execute one harmless bounded Git-assigned task with safe ownership/claiming, isolated work, validation, and report publication.
-14. Repeat a clean installation and publish physical-test evidence recording both installer and current Vincent software identities.
+1. Bring the large workstation online first as the initial persistent Vincent worker without waiting for every remaining installer test.
+2. Verify its networking, stable identity, self-checks, diagnostics, status, management access, Git access, development tooling, and bounded-work capability.
+3. Use that workstation for real Vincent/Mission Control development while installer work continues independently on the laptop.
+4. Refresh newer decisions/roadmap state before every installer build.
+5. Establish one exact authorized ISO source commit for each physical test cycle.
+6. Assign the next unique monotonically increasing **installer build number**.
+7. Build and validate the ISO with matching installer-build identity across ISO filename/metadata, USB label, installer manifests/checksums, logs, reports, and durable installation provenance.
+8. Preserve normal interactive Debian disk partitioning; Vincent does not force a storage layout.
+9. Repeatedly fresh-install the laptop and prove generic unassigned READY operation: networking, stable identity, self-checks, diagnostics, status, and management access.
+10. Prove the dedicated least-privileged `vincent` service identity and separately controlled privileged/recovery interfaces.
+11. Prove the status screen clearly distinguishes the immutable original **installer build number** from the current **Vincent software version/build**.
+12. Prove Debian/system maintenance and representative development-tool maintenance without reimaging.
+13. Implement safe public-upstream Vincent self-update in V1 if it does not materially delay the core proof. Updating Vincent changes only the software identity, never installer provenance.
+14. Prove the V1 operator-selected Git connection workflow: repository URL entry, interactive authentication, local connection state, project/dependency profile, assignment input, and report/output location.
+15. Prove project profiles can constrain dependency versions and that Vincent respects those constraints during installation and maintenance.
+16. Execute harmless bounded Git-assigned work on the large workstation and publish results/reports.
+17. Continue clean-install reproducibility testing on the laptop and publish physical-test evidence recording both installer and current Vincent software identities.
+18. At the worker-recovery/impermanence milestone, deliberately reinstall or otherwise destroy the large workstation's local worker state and prove that required durable project state permits the worker to be recreated without loss of authoritative work.
 
-**V1 acceptance:** two reproducible fresh installs reach unassigned READY without private Mission Control configuration; one worker connects to an operator-selected private Git repository, prepares its constrained task environment, completes one bounded assignment, and publishes its report. Debian/toolchain maintenance works without reimaging. Installer-build provenance remains immutable while Vincent software can advance independently through in-place update.
+**V1 acceptance:** the large workstation operates as a useful persistent Vincent worker while the laptop demonstrates reproducible clean installation. At least one worker connects to an operator-selected private Git repository, prepares its constrained task environment, completes bounded work, and publishes its report. Debian/toolchain maintenance works without reimaging. Installer-build provenance remains immutable while Vincent software can advance independently through in-place update.
 
 ## Version 1.1 lifecycle and installer work
 
@@ -66,14 +83,15 @@ Mission Control is planned as a self-hostable web control plane, not a desktop a
 
 Planned progression:
 
-1. Define stable data models for worker identity, enrollment/trust, capabilities, assignments, leases, authorization scopes, approvals, results, and audit records while early coordination may remain Git-backed.
-2. Define the authenticated outbound Vincent-to-Mission-Control protocol; normal fleet operation should not require inbound worker management ports.
-3. Prove enrollment, revocation, worker inventory/capability reporting, assignment leasing, structured results, and fleet status with two or more workers.
-4. Implement the self-hostable Mission Control service/API and database once the proven workflow justifies replacing Git-backed operational state.
-5. Implement a responsive browser interface suitable for desktop and phone-first fleet control.
-6. Package Mission Control for straightforward self-hosting on Linux servers/VMs/VPSs and, where appropriate, containers/NAS environments.
-7. Separate reusable/public Mission Control application source from Gordonfive's private deployment configuration and fleet operational state before public distribution.
-8. Evaluate an optional hosted Mission Control service without weakening self-hosting as a first-class deployment model.
+1. Use the large workstation as the first real managed-worker development subject while Mission Control starts as a Git-backed coordination model.
+2. Define stable data models for worker identity, enrollment/trust, capabilities, assignments, leases, authorization scopes, approvals, results, and audit records.
+3. Define the authenticated outbound Vincent-to-Mission-Control protocol; normal fleet operation should not require inbound worker management ports.
+4. Prove enrollment, revocation, worker inventory/capability reporting, assignment leasing, structured results, and fleet status with two or more workers.
+5. Implement the self-hostable Mission Control service/API and database once the proven workflow justifies replacing Git-backed operational state.
+6. Implement a responsive browser interface suitable for desktop and phone-first fleet control.
+7. Package Mission Control for straightforward self-hosting on Linux servers/VMs/VPSs and, where appropriate, containers/NAS environments.
+8. Separate reusable/public Mission Control application source from Gordonfive's private deployment configuration and fleet operational state before public distribution.
+9. Evaluate an optional hosted Mission Control service without weakening self-hosting as a first-class deployment model.
 
 Mission Control is not a general-purpose remote shell and does not replace SSH or normal Linux administration. Vincent remains capable of booting, self-diagnosing, maintaining itself, and updating from its trusted public upstream without Mission Control.
 
@@ -82,9 +100,9 @@ Mission Control is not a general-purpose remote shell and does not replace SSH o
 | Milestone | Outcome | Status |
 |---|---|---|
 | M0 | Architecture and Project DNA accepted | Complete |
-| M1 | Generic worker reaches unassigned READY and completes one Git-assigned bounded task | In progress |
-| M2 | Worker recovery proven | Not started |
-| M3 | Universal installer proven | Prototype / in progress |
+| M1 | Large workstation online as persistent Vincent worker and completing bounded work | In progress |
+| M2 | Laptop clean-install/recovery cycle proven; later persistent-worker impermanence/rebuild proven on large workstation | Not started |
+| M3 | Universal installer proven through repeated laptop testing | Prototype / in progress |
 | M4 | Two-worker Git coordination and assignment leasing proven | Not started |
 | M5 | Phone-first Mission Control interface/control proven | Not started |
 | M6 | Self-hostable Mission Control service/API/backend proven | Planned |
@@ -96,6 +114,7 @@ Mission Control is not a general-purpose remote shell and does not replace SSH o
 - Git is the durable technical authority; Project DNA is canonical intent.
 - Human judgment controls destructive hardware actions, production actions, credential scope, major architecture, and Project DNA changes.
 - Workers are replaceable and least-privileged.
+- A machine being replaceable does not require needlessly destroying a useful worker during routine development; destructive recovery testing occurs at an explicit acceptance gate.
 - Vincent is generic by default; private project/control sources are operator-selected after installation unless the operator explicitly enrolls the worker into Mission Control.
 - Vincent remains independently capable of boot, diagnostics, maintenance, and trusted-upstream updates without Mission Control.
 - Mission Control governs managed-fleet enrollment, authorization, assignments, leases, policy, approvals, and operational reporting; it does not become a generic remote shell.
