@@ -1,54 +1,65 @@
 # Debian USB Installer Architecture
 
-## Prototype choice
+## Approach
 
-The reference image remasters the official Debian 13 amd64 netinst hybrid ISO and adds:
+Vincent remasters a verified official Debian 13 amd64 installer image and adds the minimum public-safe Vincent provisioning payload required to create a generic worker.
 
-- a preseed file;
-- BIOS and UEFI Mission Control boot entries;
-- a Git-archived platform payload;
-- a first-boot bootstrap service;
-- no credential or permanent identity.
+The installer contains:
 
-This uses Debian Installer preseeding rather than cloning an existing worker disk.
+- Vincent installer configuration and boot entries;
+- a reproducible Vincent payload identified by source and installer build metadata;
+- first-boot provisioning and appliance services;
+- no private credential, permanent worker identity, project authorization, or reusable fleet secret.
 
-## Destructive boundary
+## Operator interaction boundary
 
-The prototype automates ordinary configuration but not target-disk authorization. After the operator selects a disk, guided partitioning replaces the entire selected disk with LVM using Debian's `atomic` recipe (all files in one root filesystem) and allocates the maximum available space. It does not select “largest free space.” Disk selection and final partition confirmation remain interactive. Network-interface selection also remains interactive so a machine without Ethernet presents Debian's scanned Wi-Fi SSID list and password prompt instead of silently choosing a network. These are deliberate bootstrap and safety gates, not missing automation.
+Vincent must not choose deployment-specific network credentials or destructive storage policy for the operator.
 
-The build operation writes only an ISO file. A separate flasher requires a stable USB by-id path, verifies removable USB hardware, rejects mounted devices, requires an exact confirmation tied to that identity, and verifies the bytes written.
+The Debian installer remains interactive for:
 
-## Default disk layout
+- network interface selection;
+- Wi-Fi SSID and passphrase when applicable;
+- target-disk selection;
+- partitioning method and layout;
+- final confirmation of disk writes.
 
-The initial profile uses Debian's simple `atomic` guided recipe on one operator-selected disk:
+Vincent may supply non-destructive defaults such as locale and keyboard. It must not force whole-disk use, guided partitioning, LVM, or a fixed partition recipe.
 
-- EFI/boot structures selected by Debian for the firmware mode;
-- one main ext4 filesystem;
-- swap according to the installer recipe.
+## Active installer-media guard
 
-This keeps recovery simple and makes all local state disposable. Multi-disk optimization and separate Docker storage are deferred until measured workload evidence justifies them.
+The medium currently booting/providing the Vincent installer is not a legitimate installation target. Vincent must identify that active medium and exclude it from the set of target disks presented for partitioning while leaving all legitimate remaining disks operator-selectable.
+
+This guard must not automatically select or prefer another disk.
+
+## Flashing boundary
+
+Building creates an image artifact only. Writing that image to removable media is a separate destructive operation. Flash tooling/procedure must identify the exact removable target using stable device identity, reject ambiguous or mounted targets, require applicable authorization, and verify the bytes written.
 
 ## Bootstrap sequence
 
 ```text
-verified Debian ISO
-  -> reproducible remaster from clean Git commit
-  -> operator-authorized USB flash
-  -> visibly destructive boot selection
-  -> manual target-disk selection and confirmation
-  -> Debian base + SSH + development prerequisites
-  -> embedded platform archive
-  -> first-boot platform installation
-  -> unique identity generation
-  -> signed Docker/DDEV repositories and tool verification
-  -> official Codex CLI installation, no authentication
-  -> ENROLLMENT_REQUIRED
+verified Debian installer source
+  -> reproducible Vincent image build
+  -> validation + manifest/checksum evidence
+  -> operator-authorized removable-media flash
+  -> interactive network and storage choices
+  -> Debian base installation
+  -> dedicated vincent service identity
+  -> first-boot Vincent provisioning
+  -> local installation identity generation
+  -> self-tests and diagnostics
+  -> UNASSIGNED READY
+  -> operator-selected Git project/control source
 ```
 
 ## Trust boundary
 
-The USB is public-equivalent provisioning material. Possession grants no private-repository or Codex access. Initial trust is established later by comparing the generated fingerprint and granting a revocable credential to that worker identity.
+Installer media is public-equivalent provisioning material. Possession grants no private repository, project, Mission Control, or AI-provider authority. Private authorization is established later through explicit operator-approved authentication/enrollment appropriate to the selected source.
 
-## Reproducibility boundary
+## Lifecycle identity
 
-The build manifest records the platform commit, Debian version, architecture, source ISO hash, and output hash. The platform payload is produced with `git archive`, so uncommitted files cannot enter the image. Exact output bytes may vary with ISO-tool implementation metadata; source inputs and resulting checksum are always recorded.
+The immutable installer build number identifies the image/media/install provenance. The installed Vincent software version/build is a separate value that may advance later through in-place updates. Status, reports, manifests, and validation must not conflate these identities.
+
+## Reproducibility
+
+Build evidence records the Vincent source, installer build number, Debian source identity/checksum, generated image checksum, and validation results. Uncommitted source must not silently enter a release image. Physical acceptance remains separate from image-build acceptance.
