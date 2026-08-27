@@ -1,121 +1,100 @@
-# Build and Flash the Debian 13 Worker USB
+# Build, Validate, Flash, and Test a Vincent Installer
 
-Status: PROTOTYPE — DESTRUCTIVE INSTALLATION REQUIRES MANUAL DISK SELECTION
+This procedure covers the safety and evidence requirements for Vincent installer testing. Exact artifact names and helper arguments must come from the source commit being tested; do not reuse filenames or build numbers from an older report.
 
-The image is built from a verified Debian 13 netinst ISO and a clean platform commit. The ISO contains no Git credential, Codex credential, administrative password, permanent worker identity, or private SSH key.
+## 1. Establish the source
 
-Debian documents preseeding as its supported installer automation mechanism and supports loading `preseed.cfg` from remastered media. Debian netinst images are hybrid images suitable for direct USB writing. See the [Debian 13 automated-installation appendix](https://www.debian.org/releases/trixie/amd64/apb.en.html) and [Debian download page](https://www.debian.org/download).
+Before building:
 
-## Safety model
+1. Fetch current repository state and inspect active installer pull requests/branches.
+2. Read `docs/DECISIONS.md` and reconcile decisions newer than the build workstream's recorded checkpoint.
+3. Select one exact source commit.
+4. Confirm the working tree is clean and the source is pushed/recoverable.
+5. Read the installer build number from the selected source and confirm it is unique for the test image.
 
-This prototype intentionally does not preseed a target disk or destructive confirmations.
+## 2. Validate the repository
 
-- The normal Debian installer remains the default boot path.
-- The Mission Control entry is visibly labeled `DESTRUCTIVE`.
-- The operator must select the installation disk.
-- Debian asks for the target disk, proposes whole-disk guided LVM with all files in one root filesystem, displays the destructive changes, and requires final confirmation.
-- The USB flasher accepts only `/dev/disk/by-id/usb-*` removable whole disks and requires an exact device-specific confirmation string.
+Run the repository validation entry point and any installer-specific tests required by the selected source.
 
-Do not weaken these controls until the first hardware inventory and destructive-test review are complete.
+Long-running commands must display progress and save complete timestamped output with `tee`, preserve pipeline status, and print an explicit final exit status.
 
-## Build host prerequisites
+A build must not proceed from failed repository validation.
 
-Use a Debian development machine with a clean clone of the public `Gordonfive/vincent` repository:
+## 3. Verify Debian source material
 
-```text
-sudo apt-get update
-sudo apt-get install -y xorriso curl gpgv debian-keyring python3 git
-```
+Use `installer/debian13/source.env` and the repository's source-fetch/verification tooling. Debian installer media must be verified against Debian's signed checksum metadata before it is used as a Vincent build input.
 
-## Fetch and verify Debian
+Do not silently change the Debian source version during a test series.
 
-The pinned source metadata is `installer/debian13/source.env`. Fetching verifies Debian's signed `SHA512SUMS` and the ISO checksum:
+## 4. Build and inspect the image
 
-```text
-sh installer/debian13/fetch-source.sh
-```
+Use the build tooling from the exact selected source commit. Record at minimum:
 
-The current pinned source is Debian 13.6.0 amd64 netinst. Updating it is a deliberate reviewed commit, not an automatic moving target.
+- Vincent source commit;
+- installer build number;
+- Debian source identity and checksum;
+- output image name and checksum;
+- generated manifest/checksum artifacts;
+- build exit status.
 
-## Build
+Run the matching image inspection/validation tooling. Validation must cover, as applicable:
 
-From a clean, pushed platform commit:
+- embedded source/build identity;
+- manifest/checksum consistency;
+- absence of private keys, credentials, reusable enrollment material, and fixed worker identities;
+- active obsolete-name checks;
+- expected boot/installer configuration;
+- installer-build identity consistency.
 
-```text
-sh installer/debian13/build-image.sh \
-  installer/debian13/cache/debian-13.6.0-amd64-netinst.iso
-```
+A successful build is not sufficient if inspection fails.
 
-The builder refuses to overwrite or append to an existing output ISO. Archive or remove a previous reconstructable artifact deliberately before rebuilding.
+## 5. Identify removable media
 
-Outputs under `dist/`:
+Before flashing, identify the exact intended removable USB device using stable hardware identity, not `/dev/sdX` alone.
 
-- customized hybrid ISO;
-- SHA-256 file;
-- JSON build manifest containing the platform commit and source/output hashes.
-
-Inspect the result:
-
-```text
-sh installer/debian13/inspect-image.sh dist/vincent-debian-13.6.0-amd64.iso
-```
-
-The ISO is a build artifact and is not committed. Git contains everything needed to recreate it.
-
-## Identify the USB device
-
-Connect only the intended USB stick, then inspect stable device identity:
+Useful inspection commands include:
 
 ```text
 lsblk -o NAME,PATH,TYPE,TRAN,RM,SIZE,MODEL,SERIAL,MOUNTPOINTS
 ls -l /dev/disk/by-id/usb-*
 ```
 
-Do not use `/dev/sdX` as the authorization identity. Do not proceed if the target is ambiguous or mounted.
+Do not proceed if the target is ambiguous, unexpected, non-removable, or mounted. Destructive authorization applies only to the exact verified device.
 
-## Flash
+## 6. Flash and verify
 
-Example only; substitute the exact by-id path shown on the build host:
+Use the repository's flashing tool with the exact validated image and stable removable-device identity. Preserve the flashing log and explicit final status.
 
-```text
-sudo sh installer/debian13/flash-usb.sh \
-  dist/vincent-debian-13.6.0-amd64.iso \
-  /dev/disk/by-id/usb-EXACT_DEVICE_ID \
-  'ERASE:usb-EXACT_DEVICE_ID'
-```
+The procedure/tool must verify the target properties and verify written image content after flashing. Record the installer build number associated with the physical media.
 
-The flasher verifies USB transport, removable status, whole-disk type, capacity, absence of mounts, and byte-for-byte image content after writing.
+## 7. Install on disposable hardware
 
-## Install the worker
+During installation verify the accepted operator-interaction boundary:
 
-1. Boot the disposable workstation from the USB in UEFI mode when available.
-2. Select `Vincent installer (DESTRUCTIVE - manual disk selection)`.
-3. Select the wired interface when it has a working link. Otherwise select the Wi-Fi interface, choose an SSID from Debian's scan, and enter its password. Wi-Fi credentials are used by the installer and are not embedded in the USB image.
-4. Create the temporary administrative user and password when Debian prompts. These are not stored on the USB.
-5. Select only the verified disposable target disk.
-6. Select the intended target disk. Confirm that Debian proposes whole-disk guided LVM with the `atomic` all-files-in-one-filesystem recipe, then review and confirm destruction.
-7. Remove the USB when Debian reboots.
+- network interface selection remains interactive;
+- Wi-Fi SSID/passphrase entry remains operator-controlled when applicable;
+- the active installer medium is not offered as an installation target;
+- the operator chooses the target disk;
+- the operator chooses partitioning method/layout;
+- final disk-write confirmation remains interactive;
+- Vincent does not require creation of a conventional human runtime account.
 
-First boot installs the platform from the embedded Git archive, generates a new worker identity, installs Docker CE, DDEV, and the Codex CLI, verifies the toolchain, and stops at `ENROLLMENT_REQUIRED`. Docker access is root-equivalent local authority and is granted only to the locked worker service account on this disposable machine.
+Do not impose a particular partitioning recipe as an acceptance criterion unless a newer accepted decision explicitly requires one.
 
-Codex installation follows the [official Codex CLI installation documentation](https://learn.chatgpt.com/docs/codex/cli). The downloaded official installer is saved and hashed in `/var/lib/mission-control-install/`; authentication is not embedded and remains an owner-controlled step.
+## 8. First-boot proof
 
-## Inspect first-boot status
+After installation, verify through Vincent's appliance status/self-test/diagnostic interfaces:
 
-At the new workstation console:
+- immutable installer build provenance;
+- current Vincent software version/build as a separate value;
+- dedicated `vincent` service identity;
+- networking and required endpoint/package reachability;
+- absence of embedded private project authority;
+- local installation identity generation;
+- unassigned READY state.
 
-```text
-sudo cat /var/lib/mission-control-install/status.json
-sudo cat /var/lib/mission-control-install/toolchain.json
-sudo cat /var/lib/mission-control/identity/enrollment-request.json
-sudo journalctl -u mission-control-first-boot.service --no-pager
-sudo cat /var/log/mission-control/bootstrap.log
-```
+Physical testing should not require routine shell repair. If a shell is needed to diagnose a failure, capture that as defect evidence rather than treating the manual repair as part of a successful installation.
 
-Expected state:
+## 9. Acceptance
 
-```text
-ENROLLMENT_REQUIRED
-```
-
-Do not enable `mission-control-worker.service` until fingerprint approval, repository authorization, Codex authentication, configuration replacement, and `doctor` success.
+Follow `V1_WORKER_ACCEPTANCE.md` for release-level proof. Preserve concise evidence tied to the exact source commit and installer build; do not create a permanent report for every failed exploratory attempt unless it contains durable information not captured by an issue or pull request.
