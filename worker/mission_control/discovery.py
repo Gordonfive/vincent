@@ -56,11 +56,24 @@ class GitTaskSource:
             tasks.append(task)
         return tuple(tasks)
 
-    def eligible(self, worker_id: str, capabilities: frozenset[str]) -> tuple[Task, ...]:
+    def eligible(
+        self,
+        worker_id: str,
+        capabilities: frozenset[str],
+        *,
+        available_ram_gb: float | None = None,
+    ) -> tuple[Task, ...]:
+        tasks = self.tasks()
+        states = {task.task_id: task.state for task in tasks}
         candidates = [
-            task for task in self.tasks()
+            task for task in tasks
             if task.state is TaskState.QUEUED
             and (task.assigned_worker is None or task.assigned_worker == worker_id)
             and set(task.required_capabilities).issubset(capabilities)
+            and (
+                task.minimum_ram_gb is None
+                or (available_ram_gb is not None and available_ram_gb >= task.minimum_ram_gb)
+            )
+            and all(states.get(dependency) is TaskState.COMPLETED for dependency in task.dependencies)
         ]
         return tuple(sorted(candidates, key=lambda task: (PRIORITY.get(task.priority, 99), task.created_at, task.task_id)))
