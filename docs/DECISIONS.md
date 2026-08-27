@@ -1,6 +1,6 @@
 # Vincent Decision Register
 
-**Register updated:** 2026-08-26T13:40:00-08:00
+**Register updated:** 2026-08-27T11:49:00-08:00
 
 This register records owner-approved product and architecture decisions that affect Vincent's design or operation.
 
@@ -115,6 +115,21 @@ Version 1.1. This feature is not required to prove the V1.0 worker architecture 
 - deterministic fallback to the bundled offline payload when network retrieval fails or the remote release is incompatible;
 - clear status/reporting of both installer build and actually installed Vincent software version/build;
 - no dependency on private Mission Control state or credentials.
+
+## VINCENT-DEC-011 — Mission Control assigns AI identity profiles; Vincent performs provider enrollment
+
+**Timestamp:** 2026-08-27T11:49:00-08:00  
+**Status:** Accepted
+
+Mission Control may assign an enrolled Vincent worker an **AI provider identity profile** describing which provider the worker should use and the intended account, organization, tenant, project, or equivalent provider context. Vincent remains responsible for executing the provider-specific enrollment/authentication flow locally through an adapter and for verifying/reporting the resulting non-secret identity and scope.
+
+For Codex, the preferred initial human authorization path is supported ChatGPT/device authorization when available. The operator may authorize the worker from another browser or device rather than requiring permanent credentials in the installer or a browser session on the worker. If a provider cannot enforce the intended account/project automatically, Vincent must verify what it can and surface a mismatch or blocked state rather than silently accepting the wrong identity.
+
+The provider adapter model must support future authentication mechanisms such as OAuth/device authorization, browser/SSO authorization, scoped API or service-account credentials, and local-model/no-remote-account operation. Mission Control defines the desired identity/profile and policy; Vincent performs enrollment and provider-specific health checks.
+
+Raw tokens, cookies, passwords, API keys, private keys, authentication caches, and other reusable credentials must never be stored in either Git repository. If future unattended enrollment requires secret delivery, credentials must be worker/provider-specific, least-privileged, revocable, and delivered through a separately protected secret-broker/backend or one-time mechanism with authenticated transport. Shared fleet-wide AI credentials are prohibited.
+
+This decision applies to Codex first but is intentionally provider-neutral so later Gemini, Copilot, Ollama/local-model, or custom-agent adapters do not require redesigning Vincent's enrollment lifecycle.
 
 ## Existing detailed decisions
 
