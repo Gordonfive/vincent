@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -34,13 +35,14 @@ class ValidationResult:
     def public_mapping(self) -> dict:
         """Return validation evidence safe for durable coordination reports.
 
-        Captured output remains local/in-memory evidence. It is deliberately not
-        serialized into Git-backed task reports because arbitrary validation
-        commands may print credentials or other sensitive values.
+        Captured output and raw command arguments remain local/in-memory evidence.
+        Either may contain credentials, private URLs, or other sensitive values.
+        Durable reports identify the command by a canonical SHA-256 instead.
         """
+        command_bytes = json.dumps(list(self.argv), separators=(",", ":")).encode()
         return {
             "name": self.name,
-            "argv": list(self.argv),
+            "argv_sha256": hashlib.sha256(command_bytes).hexdigest(),
             "started_at": self.started_at,
             "completed_at": self.completed_at,
             "exit_status": self.exit_status,
