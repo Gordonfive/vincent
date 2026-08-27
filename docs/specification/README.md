@@ -1,23 +1,24 @@
-# Specification Archive
+# Historical Specification Source
 
-The owner-approved product and architecture specification contains sections 1–260.
+The files in this directory preserve the original long-form 260-section product/design specification supplied during early project development.
 
-Preserved ranges:
+## Status
 
-- `sections-001-033.md`
-- `sections-034-067.md`
-- `sections-068-092.md` — canonical preservation/precedence index
-- `sections-068-canonical-supplied-fragment.md` — exact latest supplied Section 68 fragment; authoritative where it differs
-- `sections-068-077.md` — preserved complete older range; Sections 69–77 remain authoritative, while its Section 68 is superseded by the supplied fragment
-- `sections-078-092.md` — preserved complete Sections 78–92
-- `sections-093-107.md`
-- `sections-108-147.md`
-- `sections-148-187.md`
-- `sections-188-237.md`
-- `sections-238-260.md`
+**Historical source; not current operational documentation.**
 
-## Sections 68–92 precedence
+This material predates current Vincent naming, repository boundaries, installer decisions, generic READY behavior, update lifecycle, and other accepted architecture changes. It may contain obsolete product names, repository names, implementation proposals, and requirements that have since been superseded.
 
-Owner decision dated 2026-08-25: the latest user-supplied `Pasted markdown.md` is authoritative where it differs from older Git material. The latest supplied source ends literally at `### Step 2 — Preserve` in Section 68. No later supplied replacement for Sections 69–92 was found. Therefore the exact supplied fragment overrides the older Section 68, and the preserved Git text remains authoritative for Sections 69–92.
+Current authority is:
 
-No missing specification prose was reconstructed or invented during migration.
+1. accepted decisions in `../DECISIONS.md` and `../decisions/`;
+2. current architecture and security documentation;
+3. current release roadmap and acceptance procedures;
+4. current implementation and validated evidence.
+
+Nothing in this directory may override a newer accepted decision or be copied into implementation without reconciliation.
+
+## Planned disposition
+
+This archive should be reviewed once and distilled into conventional current documentation: product requirements, ADRs, architecture constraints, roadmap items, and planned features. After all still-useful requirements are represented elsewhere, remove this directory from the active tree and rely on Git history for the original text.
+
+Until that distillation is complete, the archive remains only to prevent accidental loss of potentially useful requirements.
