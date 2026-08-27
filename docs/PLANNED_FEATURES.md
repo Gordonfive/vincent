@@ -34,6 +34,32 @@ A per-boot or per-session ID may be useful for diagnostics. It would allow the c
 
 The conceptual model is similar to distributed-work systems such as BOINC/SETI@home: work is checked out for a bounded period, results are expected within that period, and abandoned/expired work can eventually be issued again.
 
+## Multi-agent AI worker support
+
+### Status
+
+Long-term planned feature; unscheduled and intentionally outside the near-term roadmap.
+
+### Goal
+
+Vincent should eventually be an AI-worker platform rather than a platform coupled specifically to Codex. A Vincent installation should be capable of hosting different supported AI coding/automation agents while preserving a common Vincent lifecycle around installation, configuration, enrollment, diagnostics, updates, and work execution.
+
+### Proposed model
+
+- During first boot/provisioning, Vincent can ask which AI worker/agent the installation will use.
+- Initial candidate integrations include OpenAI Codex, Google Gemini tooling, GitHub Copilot tooling, Ollama/local-model workers, and custom-built agents.
+- Vincent installs the selected agent and its required prerequisites rather than requiring every possible agent stack in the base image.
+- Agent-specific installation and configuration should be isolated behind a provider/adapter interface so Vincent's core does not become dependent on one vendor.
+- Agent definitions should describe prerequisites, installation/update procedures, runtime requirements, authentication/enrollment requirements, capabilities, health checks, and removal/replacement procedures.
+- Containerized/Docker-based agents should be supported where appropriate because container isolation can simplify dependency management and make adding or replacing agent implementations easier.
+- Native/non-containerized agents must remain possible where containers are inappropriate or unsupported.
+- Hardware/resource discovery may eventually influence which agents Vincent offers or recommends, particularly for local-model workers requiring significant CPU, RAM, storage, or GPU resources.
+- The architecture should allow additional agent providers to be added later without rebuilding Vincent's core scheduling/enrollment concepts around each provider.
+
+### Scope note
+
+This feature should not drive current Codex-focused development or delay the initial Vincent releases. Current implementation may optimize for Codex while avoiding unnecessary architectural assumptions that would make later multi-agent support difficult.
+
 ## Future architecture discussions
 
 ### Define Mission Control
