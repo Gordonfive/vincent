@@ -7,7 +7,7 @@ cd "$repository_root"
 PYTHONPATH=worker python3 -m unittest discover -s tests -q
 git diff --check
 python3 scripts/check_secrets.py
-python3 scripts/check_migration_boundaries.py
+python3 scripts/check_repository.py
 
 wheel_directory=$(mktemp -d)
 trap 'rm -rf "$wheel_directory"' EXIT HUP INT TERM
