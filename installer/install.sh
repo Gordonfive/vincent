@@ -44,6 +44,9 @@ if [ ! -f "$configuration_root/worker.toml" ]; then
 fi
 
 install -o root -g root -m 0644 \
+    "$source_root/installer/systemd/vincent-container-namespace.service" \
+    /etc/systemd/system/vincent-container-namespace.service
+install -o root -g root -m 0644 \
     "$source_root/installer/systemd/mission-control-worker.service" \
     /etc/systemd/system/mission-control-worker.service
 systemctl daemon-reload
