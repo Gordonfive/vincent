@@ -1,48 +1,33 @@
 # Project Start Here
 
-Use this file to recover the Vincent / Mission Control project in a completely new ChatGPT or Codex session. Prior chat history and legacy repositories are not required for normal recovery.
+This file is retained as a compatibility entry point. New contributors and agents should use `docs/README.md` as the documentation index.
 
-## First actions
+## Start sequence
 
-1. Connect to and fetch both authoritative repositories:
-   - `Gordonfive/vincent`
-   - `Gordonfive/mission-control`
-2. Read this file, `AGENTS.md`, `docs/ROADMAP.md`, and `docs/CONTINUATION_HANDOFF.md` in both repositories.
-3. Treat Git evidence and explicit owner decisions as authoritative.
-4. Inspect current reports before beginning a workstream.
+1. Read `AGENTS.md`.
+2. Read `docs/README.md` and `docs/STATUS.md`.
+3. Read `docs/DECISIONS.md` and `docs/ROADMAP.md`.
+4. Inspect current branches, issues, and pull requests before acting, especially for installer/ISO work that may be ahead of `main`.
+5. Read task-specific architecture, operations, security, protocol, and validation documentation.
+6. Consult `Gordonfive/mission-control` only when work crosses into private fleet/control-plane concerns.
 
 ## Repository roles
 
-- `Gordonfive/vincent` is PUBLIC and owns the generic Vincent worker platform, Debian ISO, installer, first boot, enrollment client, runtime, tests, public-safe documentation, and releases.
-- `Gordonfive/mission-control` is PRIVATE and owns fleet authorization, enrollment approval, inventory, roles, repository scopes, assignments, private coordination, and reports.
-- Historical worker-platform and bootstrap repositories were migration sources only. Their known Git histories are preserved under Vincent `legacy/*` refs and they are not required for project recovery.
+- Vincent is PUBLIC and owns the generic worker platform, Debian installer/ISO tooling, first boot, self-tests, diagnostics, update logic, runtime, public-safe documentation, tests, and releases.
+- Mission Control is PRIVATE and owns optional private fleet enrollment approval, authorization, inventory, roles, repository scopes, assignments, and private coordination.
+- Individual project repositories own project-specific source, requirements, tests, and task authority.
 
-## Durable Vincent history
+## Current operating model
 
-Important accepted/corrective evidence preserved in Git:
-
-- accepted Workstream 1 source for ISO testing: `fc032f8df1c0abde295122a8a515e9cdcf7c7b70`;
-- durable owner acceptance record: `d6fb92a6a07905dc29a1431b17d2a953abd5fbc8`;
-- Workstream 2 correction code: `3a6abb330fb11faffbd638b101ed11dca47f4216`;
-- Workstream 2 correction/report tip: `4edd5e95a403d605664402a7b1dc2d5c4f53b71b`.
-
-The first ISO built from the accepted source was rejected. Its SHA-256 is:
-
-`bcebd5fed3c82f86c7259b8dd71297e99057f630698c1742e4461265b78842a2`
-
-It must never be flashed. Migration consolidation does not authorize a replacement ISO source.
-
-## Specification preservation
-
-The specification archive under `docs/specification/` preserves Sections 1–260. For Sections 68–92, the owner directed that the latest supplied source is authoritative where it differs: the exact newer Section 68 fragment is preserved and supersedes the conflicting older Section 68; preserved Sections 69–92 remain authoritative because no newer replacement was supplied. The precedence is recorded in `docs/specification/sections-068-092.md`.
+A fresh Vincent installation is generic. It must boot, self-test, update, and reach an unassigned READY state without automatically contacting or requiring Mission Control. The operator later selects and authenticates an appropriate Git control/project source.
 
 ## Safety boundaries
 
-- Never put private fleet data or secrets in public Vincent.
-- Never commit raw tokens, passwords, private keys, authentication caches, reusable enrollment credentials, or production data to either repository.
-- Do not use the rejected ISO.
-- Migration completion does not authorize ISO flashing, release publication, production/project credentials, worker enrollment, or destructive hardware operations.
+- Never commit raw tokens, passwords, private keys, authentication caches, reusable enrollment credentials, production data, or private fleet state to public Vincent.
+- Destructive installer-media writes require exact-target identification and applicable authorization.
+- Do not infer physical-test success from a successful image build alone.
+- Accepted timestamped decisions override older implementation assumptions or historical specification text.
 
-## Recovery goal
+## Recovery principle
 
-A fresh project connected only to Vincent and Mission Control must be able to determine what the system is, why it exists, what has been completed, what failed, authority boundaries, and exactly how to continue. Migration reports in `docs/reports/` provide preservation and validation evidence.
+Normal project recovery depends on the current Vincent and Mission Control repositories plus active branches, issues, pull requests, releases, and validation evidence. Prior chat history and retired migration repositories are not operational dependencies.
