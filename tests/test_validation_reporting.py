@@ -44,7 +44,26 @@ class ValidationReportingTests(unittest.TestCase):
         data = json.loads(report.to_json())
         self.assertEqual(data["task_id"], "MCP-401")
         self.assertEqual(data["validation"][0]["exit_status"], 0)
+        self.assertNotIn("output_excerpt", data["validation"][0])
         self.assertIn("PASS: `unit`", report.to_markdown())
+
+    def test_validation_output_secrets_are_not_serialized_to_git_report(self):
+        secret = "github_pat_example_secret_value_123456789"
+        with tempfile.TemporaryDirectory() as directory:
+            result = run_validation(
+                ValidationCommand("secret-output", (sys.executable, "-c", f"print('{secret}')")),
+                Path(directory),
+            )
+        self.assertIn(secret, result.output_excerpt)
+        report = CompletionReport(
+            1, "MCP-402", "worker-1", "platform", "owner/repo", "task/MCP-402",
+            "a" * 40, "b" * 40, "COMPLETED", "start", "end", ("Validated",),
+            (result,), "VERIFIED", (), (), "0.1.0"
+        )
+        serialized = report.to_json()
+        self.assertNotIn(secret, serialized)
+        self.assertNotIn("output_excerpt", serialized)
+        self.assertIn(result.output_sha256, serialized)
 
 
 if __name__ == "__main__":
