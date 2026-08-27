@@ -23,7 +23,7 @@ List commands/checks run and concise results. Link/reference large logs or artif
 ## Documentation
 
 - [ ] Product/requirements/ADR/architecture/operations/status documentation is updated where applicable.
-- [ ] No retired `PROJECT_START_HERE`, permanent handoff, Project DNA, or planned-feature pattern was reintroduced.
+- [ ] No retired project-start, permanent-handoff, legacy product-intent, or planned-feature pattern was reintroduced.
 
 ## Integration
 
