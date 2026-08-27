@@ -48,6 +48,7 @@ jobs:
           import hashlib, json, sys
           from pathlib import Path
           image = Path(sys.argv[1]); expected_commit = sys.argv[2]; expected_build = sys.argv[3]
+          expected_volume = f"VINCENT_B{expected_build.replace('.', '_')}"
           manifest = json.loads(Path(str(image)+".manifest.json").read_text())
           actual_hash = hashlib.sha256(image.read_bytes()).hexdigest()
           checks = {
@@ -55,7 +56,7 @@ jobs:
               "build_number": manifest.get("build_number") == expected_build,
               "output_iso": manifest.get("output_iso") == image.name,
               "output_sha256": manifest.get("output_sha256") == actual_hash,
-              "volume_id": manifest.get("volume_id") == f"VINCENT_B{expected_build}",
+              "volume_id": manifest.get("volume_id") == expected_volume,
               "partitioning_mode": manifest.get("partitioning_mode") == "debian_installer_interactive",
               "service_account": manifest.get("service_account") == "vincent",
               "embedded_secrets": manifest.get("embedded_secrets") is False,
