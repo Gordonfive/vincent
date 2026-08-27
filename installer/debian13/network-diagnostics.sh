@@ -37,7 +37,7 @@ http_probe() {
     nmcli -f GENERAL.DEVICE,GENERAL.TYPE,GENERAL.STATE,GENERAL.CONNECTION,IP4.ADDRESS,IP4.GATEWAY device show 2>&1 || true
     echo
     echo "===== DNS ====="
-    for host in deb.debian.org github.com chatgpt.com download.docker.com; do
+    for host in deb.debian.org github.com chatgpt.com; do
         printf '%s: ' "$host"
         getent ahostsv4 "$host" 2>/dev/null | awk 'NR==1 {print $1; found=1} END {if (!found) print "FAIL"}'
     done
@@ -45,7 +45,6 @@ http_probe() {
     echo "===== REQUIRED ENDPOINTS ====="
     http_probe "debian-index" "https://deb.debian.org/debian/dists/trixie/InRelease"
     http_probe "codex-installer" "https://chatgpt.com/codex/install.sh"
-    http_probe "docker-index" "https://download.docker.com/linux/debian/dists/trixie/InRelease"
     if git ls-remote https://github.com/Gordonfive/vincent.git HEAD >/dev/null 2>&1; then
         echo "vincent-git        PASS             https://github.com/Gordonfive/vincent.git"
     else
@@ -53,7 +52,7 @@ http_probe() {
     fi
     echo
     echo "===== DEBIAN PACKAGE VISIBILITY ====="
-    for package in git curl ca-certificates rsync python3-venv python3-pip python3-setuptools build-essential xz-utils; do
+    for package in git curl ca-certificates rsync python3-venv python3-pip python3-setuptools build-essential xz-utils podman podman-docker uidmap; do
         candidate=$(apt-cache policy "$package" 2>/dev/null | awk '/Candidate:/ {print $2; exit}')
         [ -n "$candidate" ] || candidate=UNKNOWN
         printf '%s candidate=%s\n' "$package" "$candidate"
