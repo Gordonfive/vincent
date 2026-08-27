@@ -6,13 +6,13 @@ This file records temporary/current implementation and validation state. It is n
 
 ## Repository state
 
-- `main` remains the current default integration branch until the canonical documentation reset merges.
-- Canonical documentation/governance reset is under review in PR #12 from `docs/canonical-docs-reset-20260827`.
-- Active installer/ISO implementation and physical-test work remains on `workstream/iso-decisions-reconcile`; latest observed tip during this reset: `14e6d94e2ddea210a58ce866802e1c55f135befc`.
-- The standalone AI-provider documentation branch is superseded by PR #12; its accepted provider-boundary content is represented in `PRODUCT.md`, `REQUIREMENTS.md`, architecture, and ADR-0011.
-- The earlier documentation-cleanup branch/PR is superseded by PR #12.
+- `main` is the canonical integration branch.
+- The documentation/governance reset was merged through PR #12 at `fb5c8df423be39d80e0effcfe28e688fd7114810`.
+- PR #12 validation completed successfully.
+- Active installer/ISO implementation and physical-test work remains separate on `workstream/iso-decisions-reconcile`; latest observed tip during the documentation reset was `14e6d94e2ddea210a58ce866802e1c55f135befc`.
+- Earlier standalone AI-provider and documentation-cleanup branches/PRs are superseded by the canonical documentation now on `main`.
 
-Target branch policy after reconciliation: `main` is the only permanent branch; temporary PR branches are deleted after integration/supersession.
+Branch policy: `main` is the only permanent branch; temporary PR branches are deleted after integration or supersession once useful work is preserved.
 
 ## Current installer/worker development
 
@@ -27,7 +27,7 @@ The active installer workstream includes current implementation for:
 - installer network-preflight evidence for DNS/interception/Debian-source failures;
 - local status/diagnostic/console surfaces and non-secret evidence collection.
 
-The active ISO branch remains the implementation authority for those changes until its code is reconciled and validated against the canonical requirements/ADRs after the documentation reset.
+The active ISO branch remains the implementation authority for those changes until its code is reconciled and validated against the canonical requirements/ADRs.
 
 ## Physical development strategy
 
@@ -38,13 +38,13 @@ Later, after the persistent workstation has performed useful work and required d
 
 This is temporary lab strategy, not permanent product architecture.
 
-## Documentation/governance reset state
+## Documentation/governance state
 
-Completed on the current documentation branch:
+The documentation cleanup/reorganization gate is complete on `main`:
 
 - Vincent is the product name; no acronym/backronym.
-- MPL-2.0 license added.
-- conventional `PRODUCT.md` and numbered `REQUIREMENTS.md` established;
+- MPL-2.0 license is established.
+- conventional `PRODUCT.md` and numbered `REQUIREMENTS.md` are authoritative;
 - all 260 historical specification sections have an explicit disposition in `docs/history/SPECIFICATION_TRACEABILITY_2026-08-27.md`;
 - the monolithic historical specification has been removed from the active tree;
 - ADRs replace the old mixed decision register;
@@ -52,23 +52,20 @@ Completed on the current documentation branch:
 - GitHub issues are the unscheduled backlog;
 - Mission Control owns the overall program roadmap; Vincent roadmap is product-specific;
 - migration/reset/prototype reports have been removed from the active tree after distillation;
-- independent SemVer, `CHANGELOG.md`, contribution workflow, PR template, and trunk/squash conventions established;
-- repository validation now checks canonical documents, requirement/ADR IDs, links, public/private boundary, historical traceability, and credential patterns.
+- independent SemVer, `CHANGELOG.md`, contribution workflow, PR template, and trunk/squash conventions are established;
+- repository validation checks canonical documents, requirement/ADR IDs, links, public/private boundary, historical traceability, and credential patterns;
+- active repository search found no remaining `GitBoy` references.
 
-## Current validation
+## Validation
 
-PR #12 CI reached the full test suite successfully:
+PR #12 validation completed successfully:
 
 - 109 unit/integration tests: PASS;
 - credential-pattern scan: PASS;
-- remaining CI cleanup at the time of this status update is limited to stale documentation terminology/dead-link corrections in the canonical-document validator.
+- canonical documentation validation: PASS.
 
-## Next integration gates
+## Next technical gate
 
-1. Obtain green CI on PR #12.
-2. Squash-merge PR #12 to `main`.
-3. Close/delete superseded documentation/AI-provider branches and PRs.
-4. Reconcile `workstream/iso-decisions-reconcile` against the new requirements/ADRs without losing its newer installer fixes.
-5. Resume physical installer validation from that reconciled implementation branch.
+The next technical task, not part of this documentation closeout, is to reconcile `workstream/iso-decisions-reconcile` against the canonical requirements/ADRs before resuming physical installer validation.
 
 Documentation status alone does not authorize destructive flashing/reinstallation, production actions, credential expansion, protected releases, or other high-impact operations that retain separate operator gates.
