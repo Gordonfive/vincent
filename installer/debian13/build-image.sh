@@ -52,10 +52,11 @@ install -m 0644 "$script_root/vincent-diagnostics-console.service" "$payload_roo
 install -m 0644 "$script_root/isolinux-mission-control.cfg" "$payload_root/isolinux-mission-control.cfg"
 install -m 0644 "$script_root/grub-mission-control.cfg" "$payload_root/grub-mission-control.cfg"
 
-# Build a complete Debian dependency closure into the installer. This makes the
-# OS installation independent of Internet mirrors; network repositories are
-# only needed after the installed OS has booted with its normal trust store.
-sh "$script_root/prepare-offline-packages.sh" "$payload_root/offline-packages.tar.gz"
+# Build a complete Debian dependency closure into the installer. Package
+# resolution is pinned to Debian 13 and derives its archive trust anchor from
+# this exact already-verified source ISO, never from the build host's APT
+# configuration.
+sh "$script_root/prepare-offline-packages.sh" "$payload_root/offline-packages.tar.gz" "$source_iso"
 offline_bundle_sha256=$(sha256sum "$payload_root/offline-packages.tar.gz" | awk '{print $1}')
 offline_package_count=$(wc -l <"$payload_root/offline-packages.tar.gz.manifest" | tr -d ' ')
 mv "$payload_root/offline-packages.tar.gz.manifest" "$payload_root/offline-packages.manifest"
