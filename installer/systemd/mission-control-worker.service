@@ -1,7 +1,8 @@
 [Unit]
 Description=Vincent Codex Worker
-After=network-online.target
+After=network-online.target vincent-container-namespace.service
 Wants=network-online.target
+Requires=vincent-container-namespace.service
 ConditionPathExists=/etc/mission-control/worker.toml
 
 [Service]
