@@ -84,6 +84,17 @@ Planned lifecycle improvements after the 1.0 foundation:
 - clearer maintenance/project-constraint reporting;
 - reduce need to reimage installation media solely because Vincent application software advanced.
 
+## Managed-worker availability and power management
+
+Required behavior for workers enrolled in CIC Station:
+
+- an enrolled worker that is marked **Available** remains logically awake, network-reachable, and able to check for assignments, renew leases, report health, and receive control-plane instructions;
+- ordinary system suspend/hibernate must not make an Available worker unreachable;
+- while Available and idle, Vincent should rely on normal Linux hardware power management such as CPU frequency scaling/deep idle states, display power-off, storage power management where safe, and GPU/runtime power management rather than keeping hardware at full performance;
+- initial managed worker states are **Working**, **Available**, and **Offline**;
+- a future **Standby** state may use suspend or deeper power saving only when a reliable remote-wake mechanism such as Wake-on-LAN, IPMI, AMT, smart-PDU control, or equivalent has been implemented and validated;
+- CIC Station must not assign work to a worker known to be Offline or to a future Standby worker unless the corresponding wake path is available and successful.
+
 ## Later Vincent product work
 
 Later work is tracked as GitHub issues and promoted into this roadmap only when scheduled. Expected areas include:
