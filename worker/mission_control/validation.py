@@ -31,6 +31,23 @@ class ValidationResult:
     def passed(self) -> bool:
         return self.exit_status == 0 and not self.timed_out
 
+    def public_mapping(self) -> dict:
+        """Return validation evidence safe for durable coordination reports.
+
+        Captured output remains local/in-memory evidence. It is deliberately not
+        serialized into Git-backed task reports because arbitrary validation
+        commands may print credentials or other sensitive values.
+        """
+        return {
+            "name": self.name,
+            "argv": list(self.argv),
+            "started_at": self.started_at,
+            "completed_at": self.completed_at,
+            "exit_status": self.exit_status,
+            "timed_out": self.timed_out,
+            "output_sha256": self.output_sha256,
+        }
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
