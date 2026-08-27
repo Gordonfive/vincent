@@ -14,7 +14,7 @@ Before consequential work, read:
 6. the relevant `docs/ROADMAP.md`, ADRs, architecture, operations/protocols and active issues/PRs for the task
 7. `SECURITY.md`
 
-Do not depend on historical chat, permanent handoff files, Project DNA, `PROJECT_START_HERE.md`, `PLANNED_FEATURES.md`, or migration reports as current authority.
+Do not depend on historical chat, permanent handoff files, retired product-intent documents, project-start documents, planned-feature files, or migration reports as current authority.
 
 ## Authority and safety
 
