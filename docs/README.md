@@ -17,7 +17,7 @@ Each document type has one purpose. Do not duplicate the same editable source of
 | [`STATUS.md`](STATUS.md) | Current implementation, validation, active blockers, and temporary development state |
 | [`operations/`](operations/) | Supported operational procedures and acceptance runbooks |
 | [`protocols/`](protocols/) | Protocol/schema contracts |
-| [`reports/`](reports/) | Only concise evidence that remains operationally relevant |
+| [`history/`](history/) | Limited migration/traceability evidence retained only when it explains current authority |
 
 Repository root documents provide conventional entry points:
 
@@ -61,4 +61,4 @@ A new human, ChatGPT session, or coding agent should normally read:
 5. `STATUS.md` for current state;
 6. the relevant roadmap, ADRs, architecture, operations, and active issues/PRs for the task at hand.
 
-Permanent `PROJECT_START_HERE.md`, `CONTINUATION_HANDOFF.md`, `PLANNED_FEATURES.md`, and Project DNA documents are intentionally retired.
+Permanent project-start, continuation-handoff, planned-feature-backlog, and retired product-intent documents are intentionally not part of the current documentation model.
