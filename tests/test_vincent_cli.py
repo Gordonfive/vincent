@@ -25,6 +25,12 @@ class VincentCliTests(unittest.TestCase):
         load.return_value = {"schema_version": 1, "product": "Vincent", "bootstrap_repository": "attacker/repository", "platform_repository": "attacker/repository"}
         with self.assertRaises(RuntimeError): vincent_cli.load_instructions()
 
+    def test_enrollment_request_uses_identity_directory(self):
+        self.assertEqual(
+            vincent_cli.ENROLLMENT_REQUEST,
+            Path("/var/lib/vincent/identity/enrollment-request.json"),
+        )
+
     def test_authorization_must_match_worker(self):
         with TemporaryDirectory() as temporary:
             authorization = Path(temporary) / "authorization.json"
