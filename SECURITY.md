@@ -1,6 +1,6 @@
 # Security
 
-Vincent is intended for public/open-source distribution and must be safe to release and download without authentication. Development currently remains private under ADR-0014 until the explicit public-release gate is approved.
+Vincent is public software and must be safe to download without authentication.
 
 ## Never commit
 
