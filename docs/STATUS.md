@@ -6,11 +6,11 @@ This file records temporary/current implementation and validation state. It is n
 
 ## Repository state
 
-- `main` is the canonical integration branch.
+- `main` is the canonical integration branch and the only permanent branch.
 - The documentation/governance reset was merged through PR #12 at `fb5c8df423be39d80e0effcfe28e688fd7114810`; its validation completed successfully.
-- Installer/ISO implementation from the former ISO workstreams has been reconciled onto `workstream/iso-main-consolidation-20260827`, based on current `main`, without restoring retired migration/handoff documentation.
-- Accepted independent version/build identity is preserved in ADR-0015: Vincent `0.1.0`, installer `0.1.0`, independent monotonic build counters; the reconciled installer candidate is build `0022`.
-- Earlier standalone AI-provider and documentation-cleanup branches/PRs are superseded by canonical documentation on `main`.
+- Installer/ISO implementation from the former ISO workstreams was reconciled onto `main` at `1edbe47a5248ce2a378646decae6ccfaa1c6f1ef` without restoring retired migration/handoff documentation.
+- Accepted independent version/build identity is preserved in ADR-0015: Vincent `0.1.0`, installer `0.1.0`, independent monotonic build counters; the current installer candidate is build `0022`.
+- Earlier standalone AI-provider, documentation-cleanup, and ISO-consolidation branches are superseded by canonical state on `main`.
 
 Branch policy: `main` is the only permanent branch; temporary PR branches are deleted after integration or supersession once useful work is preserved.
 
@@ -30,7 +30,7 @@ The reconciled installer candidate includes current implementation for:
 - preserved Codex companion-runtime layout and bubblewrap dependency;
 - local status/diagnostic/console surfaces and non-secret evidence collection.
 
-Worker-internal `mission_control` package/service identifiers remain existing implementation naming debt tracked separately in issue #5; they are not being renamed as part of ISO consolidation.
+Worker-internal `mission_control` package/service identifiers remain implementation naming debt tracked in issue #5. Version/build identifiers also still require full runtime/tooling wiring under issue #20.
 
 ## Carried-forward physical-test state
 
@@ -72,7 +72,7 @@ The documentation cleanup/reorganization gate is complete on `main`:
 - Mission Control owns the overall program roadmap; Vincent roadmap is product-specific;
 - migration/reset/prototype reports have been removed from the active tree after distillation;
 - independent SemVer, `CHANGELOG.md`, contribution workflow, PR template, and trunk/squash conventions are established;
-- repository validation checks canonical documents, requirement/ADR IDs, links, public/private boundary, historical traceability, and credential patterns;
+- repository validation checks canonical documents, requirement/ADR IDs, links, release-safety boundaries, historical traceability, and credential patterns;
 - active canonical documentation contains no `GitBoy` references.
 
 ## Validation
@@ -83,12 +83,12 @@ Documentation-reset validation on PR #12 passed:
 - credential-pattern scan: PASS;
 - canonical documentation validation: PASS.
 
-The reconciled installer candidate must now pass repository/CI validation before integration. Physical build-0022 validation intentionally follows consolidation so physical evidence corresponds to the exact source retained on `main`.
+The reconciled installer implementation passed repository validation before integration at `1edbe47a5248ce2a378646decae6ccfaa1c6f1ef`. Physical validation of installer build `0022` remains pending and must correspond to the exact source retained on `main`.
 
 ## Next technical gate
 
-1. Validate and integrate `workstream/iso-main-consolidation-20260827` into `main`.
-2. Build Vincent Installer `0.1.0` build `0022` from the resulting exact `main` commit.
+1. Resolve QA blockers that prevent a fresh installer from completing first boot reliably without depending on re-fetching its bundled Vincent payload.
+2. Build the next Vincent Installer `0.1.0` candidate from the resulting exact accepted `main` commit.
 3. Execute the carried-forward physical regression/verification issues on the laptop and workstation as applicable.
 4. Close, retain, or reclassify each historical bug based on current evidence.
 

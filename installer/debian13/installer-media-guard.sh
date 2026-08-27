@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-# VINCENT-DEC-008: remove only the active installer medium from Debian's disk
+# ADR-0004: remove only the active installer medium from Debian's disk
 # enumeration. Do not select, rank, or otherwise prefer any remaining disk.
 media_source=$(awk '$2 == "/cdrom" { print $1; exit }' /proc/mounts)
 case "$media_source" in

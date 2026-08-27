@@ -12,7 +12,7 @@ import urllib.request
 
 INSTRUCTIONS_URL = "https://raw.githubusercontent.com/Gordonfive/vincent/main/bootstrap/instructions.json"
 EXPECTED_BOOTSTRAP_REPOSITORY = "Gordonfive/vincent"
-ENROLLMENT_REQUEST = Path("/var/lib/vincent/enrollment-request.json")
+ENROLLMENT_REQUEST = Path("/var/lib/vincent/identity/enrollment-request.json")
 AUTHORIZATION = Path("/etc/vincent/authorization.json")
 
 def run(command: list[str], *, check: bool = True, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:

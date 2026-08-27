@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "vincent-worker-platform"
 version = "0.1.0"
-description = "Protocol core for reproducible Codex development workers"
+description = "Protocol core for reproducible AI development workers"
 requires-python = ">=3.11"
 
 [project.scripts]
