@@ -1,36 +1,45 @@
 # Recovery Model
 
-## Reboot reconciliation
+## Worker restart reconciliation
 
-1. systemd starts supervisor.
-2. Validate worker identity and configuration.
-3. Load atomic local operational state.
-4. Fetch authoritative remote state.
-5. Revalidate task ownership and schema.
-6. Inspect repository, worktree, branch, and untracked evidence.
-7. Classify interruption and remote divergence.
-8. Resume only when deterministic; otherwise block and report.
+1. Start the Vincent supervisor and validate local installation identity/configuration.
+2. Load crash-safe local operational state.
+3. Re-establish network health and access to the operator-selected project/control source when one is configured.
+4. Fetch authoritative remote task/repository state.
+5. Revalidate task existence, ownership/lease state, schema, repository, worktree, branch, and untracked evidence.
+6. Classify interruption and remote divergence.
+7. Resume only when ownership and workspace state are deterministic; otherwise block and report.
+
+A local `ACTIVE` marker alone never proves current task ownership.
 
 ## Failure classes
 
-- `TRANSIENT_CODEX_FAILURE`
-- `AUTHENTICATION_FAILURE`
-- `USAGE_LIMIT`
-- `NETWORK_FAILURE`
-- `GIT_DIVERGENCE`
-- `VALIDATION_FAILURE`
-- `TASK_FAILURE`
-- `UNKNOWN_FAILURE`
+Representative classes include:
 
-Retries are bounded and back off. Repeated unknown failure becomes blocked or failed.
+- AI-agent/provider failure;
+- authentication/authorization failure;
+- usage/capacity limit;
+- network/DNS/TLS/repository failure;
+- Git divergence or ownership conflict;
+- validation failure;
+- task failure;
+- unknown failure.
+
+Retries must be bounded and use backoff. Repeated or ambiguous failure becomes blocked/failed and preserves evidence.
 
 ## Checkpoints
 
-Checkpoint after coherent milestones, before risky operations or long tests, before waiting for a decision, at detected usage limitation, before planned shutdown, and at completion. Avoid timer-driven meaningless commits.
+Checkpoint coherent work before risky operations or long validation, before waiting for a decision, on detected capacity limitation, before planned shutdown, and at task completion. Avoid meaningless timer-driven commits.
 
-Track separately: local, committed, pushed, reviewed, and integrated progress.
+Track local, committed, pushed, reviewed, integrated, and released state separately.
 
-## Fleet recovery
+## Replacement recovery
 
-Blank machines plus reproducible installer inputs, enrollment authority, platform/project Git repositories, Project DNA, project manifests, and sanitized fixtures must reconstruct the development operation. No worker disk, terminal history, or ChatGPT history is authoritative.
+A replacement worker should be reconstructable from:
 
+- validated Vincent installer/release inputs;
+- current Vincent and project/control Git repositories;
+- project requirements/configuration and sanitized development fixtures;
+- protected external authorization/authentication material as applicable.
+
+No worker disk, terminal history, chat thread, or optional coordinator database may be the sole authoritative copy of project source, requirements, assignments, accepted decisions, or completion reports.
