@@ -29,8 +29,8 @@ Architecture Decision Records (ADRs) are the authoritative record of consequenti
 | [ADR-0010](ADR-0010-network-installer.md) | Proposed | Compatible installers may fetch the current approved Vincent release |
 | [ADR-0011](ADR-0011-ai-provider-adapter-enrollment.md) | Accepted | Provider-neutral adapters; Vincent performs provider-specific local enrollment |
 
-## Migrated legacy decision identifiers
+## Migrated legacy decisions
 
-The former `VINCENT-DEC-*` register was retired because concurrent branches reused the same identifiers for different decisions. The ADR migration preserves the decisions themselves but does not preserve ambiguous legacy numbers as authority.
+The former monolithic decision register was retired because concurrent branches reused identifiers for different decisions. The ADR migration preserves the decisions themselves while discarding ambiguous legacy numbering as active authority.
 
-Historical legacy identifiers may appear in Git history or migration evidence only. Active documentation must reference the ADRs above.
+Historical identifiers may appear in Git history or traceability evidence only. Active documentation must reference the ADRs above.
