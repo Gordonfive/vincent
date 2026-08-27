@@ -1,43 +1,48 @@
 # Vincent
 
-**Verified Intelligent Node for Codex Execution, Networking, and Tasks**
+Vincent is a Linux-first platform for turning ordinary computers into reproducible AI development workers.
 
-> **Project recovery:** a fresh ChatGPT/Codex project should begin with `docs/PROJECT_START_HERE.md`, then read `docs/ROADMAP.md` and `docs/CONTINUATION_HANDOFF.md`.
+The product name is **Vincent**. It is not an acronym. Lowercase `vincent` is used for commands, packages, service identities, paths, configuration keys, and other technical identifiers where lowercase is conventional.
 
-Vincent is the public, Linux-first worker platform for reproducible Codex development machines. It provides the Debian installer, first-boot bootstrap, enrollment client, worker runtime, health reporting, and optional VS Code workspace defaults.
+Vincent provides the Debian-based installer, first-boot/runtime software, local worker services, diagnostics, update mechanisms, Git/project connection, AI-provider adapters, and the execution environment used for bounded development work.
 
-Vincent does not contain private fleet configuration, project authority, permanent credentials, or production access. Those belong to the private `Gordonfive/mission-control` repository and the assigned project repository.
+A fresh Vincent installation is independently functional. It can install, boot, diagnose itself, maintain Debian and its toolchain, update Vincent from its trusted public release channel, and reach an unassigned READY state without Mission Control.
+
+Mission Control is a separate optional control-plane product for managed fleets. Project repositories remain authoritative for their own source, requirements, instructions, tests, and durable project artifacts.
+
+## Documentation
+
+Start with:
+
+- [`docs/README.md`](docs/README.md) — documentation index and authority model
+- [`docs/PRODUCT.md`](docs/PRODUCT.md) — product definition, goals, and boundaries
+- [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) — numbered product requirements
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system architecture
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — Vincent product/release roadmap
+- [`docs/STATUS.md`](docs/STATUS.md) — current implementation and test state
+- [`docs/decisions/README.md`](docs/decisions/README.md) — Architecture Decision Record index
+- [`AGENTS.md`](AGENTS.md) — instructions for coding/AI agents working in this repository
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — development and repository workflow
+- [`SECURITY.md`](SECURITY.md) — security reporting and repository security rules
+
+The overall Vincent + Mission Control program roadmap is owned by the private Mission Control program repository. This repository's roadmap covers Vincent only.
 
 ## Repository boundary
 
-This repository owns:
+This public repository owns reusable Vincent software and public-safe documentation, including:
 
-- reproducible Debian 13 ISO and installer source;
-- the `vincent` command and first-boot experience;
-- generation of a unique worker identity and enrollment request;
-- generic Codex, Git, service, logging, reporting, and health components;
-- optional VS Code/VSCodium defaults;
-- tests, public documentation, checksums, release artifacts, and preserved public legacy history.
+- Debian installer/ISO tooling and reproducible build inputs;
+- first-boot and local runtime components;
+- worker self-tests, status, logging, network recovery, and diagnostics;
+- trusted Vincent update logic;
+- generic Git/project connection behavior;
+- AI-provider adapter interfaces and provider-specific local enrollment integration;
+- tests, schemas, operations documentation, release metadata, and release artifacts.
 
-This repository must never contain:
+This repository must never contain private fleet state, private project operating state, reusable credentials, authentication caches, private keys, production secrets, or owner-specific infrastructure configuration.
 
-- private keys, passwords, access tokens, or authentication caches;
-- owner or fleet credentials;
-- private infrastructure configuration that belongs in Mission Control;
-- private project-specific operating state;
-- permanent worker identities;
-- unrestricted or shared fleet credentials.
+## Versioning and license
 
-## Authority chain
+Vincent uses independent [Semantic Versioning](https://semver.org/) for software releases. Installer build numbers are separate immutable provenance identifiers and are never reused as Vincent software versions.
 
-1. Vincent's built-in safety boundaries.
-2. Private Mission Control fleet policy.
-3. The assigned project's `AGENTS.md` and Project DNA.
-4. The bounded task packet.
-5. Interactive operator direction.
-
-Lower layers may add specificity but cannot weaken higher-level security restrictions.
-
-## Migration state
-
-The generic worker implementation, installer, bootstrap, runtime, tests, Project DNA, protocols, Workstream 1 acceptance evidence, Workstream 2 corrections, and complete specification preservation records are consolidated on the migration-completion candidate. The default branch should be treated as authoritative only after the recorded consolidation merge and validation gates are complete.
+Vincent is licensed under the **Mozilla Public License 2.0 (MPL-2.0)**. Modifications to MPL-covered Vincent source files remain available under MPL when distributed, while separate surrounding integrations may use other licenses subject to their own terms.

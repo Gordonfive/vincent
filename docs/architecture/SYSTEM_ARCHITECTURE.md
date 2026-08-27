@@ -1,30 +1,74 @@
-# System Architecture
+# Vincent System Architecture
 
-## Layers
+This document expands the high-level [`../ARCHITECTURE.md`](../ARCHITECTURE.md). Product requirements are normative in [`../REQUIREMENTS.md`](../REQUIREMENTS.md).
 
-1. **Durable control plane:** Git repositories containing Project DNA, project manifests, tasks, decisions, reports, reviews, and integration records.
-2. **Operational coordinator:** replaceable service for registry, heartbeats, leases, dispatch, events, and stale-state detection.
-3. **Worker supervisor:** systemd-managed local state machine that reconciles durable tasks, prepares isolated workspaces, invokes Codex, validates independently, publishes, and reports.
-4. **Execution environment:** task-specific Git worktree and project-local/containerized tooling.
-5. **Codex:** invoked through a supported noninteractive interface; not used for deterministic local steps that the supervisor can perform directly.
+## Local layers
 
-## Codex interface decision
+1. **Installer/bootstrap** — creates a reproducible Debian/Vincent system without private authority.
+2. **System services** — root-owned narrow privileged helpers plus systemd lifecycle.
+3. **Vincent supervisor/runtime** — runs as the dedicated `vincent` service identity, reconciles local/remote task state, prepares environments, invokes AI-provider adapters, validates/publishes/reports, and recovers after interruption.
+4. **Workspace/environment layer** — isolated Git worktree/checkout plus project-local or containerized tooling and project version constraints.
+5. **AI-provider adapter** — installs/configures/invokes the selected provider and implements provider-specific enrollment/authentication health/identity checks.
+6. **External project/control source** — authoritative project requirements/instructions/tasks/results for standalone operation, or the Mission Control integration when explicitly enrolled.
 
-The initial supervisor target is `codex exec`, because current official documentation marks it stable for scripted noninteractive runs, supports JSONL event output, and supports resuming a saved exec session. Phase 1 must verify actual installed-version behavior, exit codes, session IDs, failure events, and usage-limit signals before relying on automatic resumption.
+## Durable authority model
 
-The experimental app server may be evaluated later; it is not the Phase 1 dependency. Terminal keystroke injection is rejected.
+Vincent does not attempt to make one database or worker filesystem authoritative for everything.
 
-## Durable versus ephemeral
-
-| State | Authority |
+| State | Authority / retention |
 |---|---|
-| Project DNA, task definition, owner decision, completion report, source history | Git |
-| Workspace changes not yet pushed | Local and at risk |
-| Worker heartbeat, process ID, resource samples, short lease | Coordinator/local ephemeral state |
-| Worker private key and Codex auth | Worker secret storage |
-| Platform and project configuration | Git, excluding secret values |
+| Project source, requirements, repository instructions, durable project artifacts | Project repository/system |
+| Vincent product requirements, ADRs, source and releases | Vincent Git/release channel |
+| Managed-fleet trust, assignments/leases, approvals/audit | Mission Control when enrolled |
+| Local private worker identity and credentials | Protected worker storage; replaceable/revocable |
+| Workspace progress not yet pushed | Local and at risk; checkpoint/publish policy limits exposure |
+| Live process/session/resource samples | Local/ephemeral |
+
+## Execution path
+
+```text
+bounded task / project authority
+        ↓
+Vincent validates scope + ownership + environment
+        ↓
+prepare isolated workspace
+        ↓
+perform deterministic local steps directly
+        ↓
+invoke selected AI provider through adapter when AI reasoning is required
+        ↓
+independent validation
+        ↓
+Git/result publication with remote verification
+        ↓
+structured completion/block/failure report
+```
+
+AI agents are not used for deterministic work the supervisor can perform directly when avoiding the AI call is simpler and more reliable.
+
+## Codex-first provider implementation
+
+Codex is the initial provider, but the legacy `codex exec` ADR is not the permanent top-level architecture. Provider-specific interface choices belong under the AI-provider adapter and must be verified against the actually supported provider tooling/version during implementation.
+
+Terminal keystroke injection is not an acceptable primary automation interface when a supported programmatic/noninteractive interface exists.
+
+## Recovery property
+
+Supervisor restart, worker reboot, abrupt power loss, temporary network loss, provider interruption, or coordinator loss must not cause blind continuation.
+
+Recovery revalidates:
+
+- worker identity and local protected state;
+- task/lease ownership where applicable;
+- remote Git/project state;
+- workspace cleanliness/progress;
+- provider authentication health;
+- whether continuation/retry is safe.
+
+Ambiguous ownership or authoritative divergence blocks/escalates instead of guessing.
 
 ## Replacement property
 
-Loss of a worker must cost only reconstructable cache, local logs, worker-specific credentials, and at most bounded unpushed progress. Loss of the coordinator must not lose tasks, reports, decisions, or intent.
+Loss of a worker should cost only reconstructable caches/environment state, local logs, worker-specific credentials that can be revoked/recreated, and at most bounded unpushed progress. Authoritative completed work must remain external to the worker.
 
+Mission Control, when used, is also designed as a replaceable control-plane service whose durable program/application source and private fleet state are separately recoverable according to its own architecture.
