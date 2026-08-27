@@ -45,10 +45,12 @@ class ValidationReportingTests(unittest.TestCase):
         self.assertEqual(data["task_id"], "MCP-401")
         self.assertEqual(data["validation"][0]["exit_status"], 0)
         self.assertNotIn("output_excerpt", data["validation"][0])
+        self.assertNotIn("argv", data["validation"][0])
+        self.assertEqual(len(data["validation"][0]["argv_sha256"]), 64)
         self.assertIn("PASS: `unit`", report.to_markdown())
 
-    def test_validation_output_secrets_are_not_serialized_to_git_report(self):
-        secret = "github_pat_example_secret_value_123456789"
+    def test_validation_secrets_are_not_serialized_to_git_report(self):
+        secret = "API_TOKEN=example-sensitive-value-that-must-not-leak"
         with tempfile.TemporaryDirectory() as directory:
             result = run_validation(
                 ValidationCommand("secret-output", (sys.executable, "-c", f"print('{secret}')")),
@@ -63,6 +65,7 @@ class ValidationReportingTests(unittest.TestCase):
         serialized = report.to_json()
         self.assertNotIn(secret, serialized)
         self.assertNotIn("output_excerpt", serialized)
+        self.assertNotIn(f"print('{secret}')", serialized)
         self.assertIn(result.output_sha256, serialized)
 
 
