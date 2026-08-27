@@ -51,6 +51,18 @@ class TaskModelTests(unittest.TestCase):
         with self.assertRaisesRegex(ProtocolError, "must be set together"):
             Task.from_mapping(valid_task(claim_worker_id="worker-01"))
 
+    def test_rejects_unimplemented_unattended_recovery_policy(self):
+        with self.assertRaisesRegex(ProtocolError, "can_continue_unattended=true"):
+            Task.from_mapping(valid_task(can_continue_unattended=True))
+
+    def test_rejects_unimplemented_forbidden_action_policy(self):
+        with self.assertRaisesRegex(ProtocolError, "not mechanically enforceable"):
+            Task.from_mapping(valid_task(forbidden_actions=["do not deploy"]))
+
+    def test_rejects_unknown_integration_policy(self):
+        with self.assertRaisesRegex(ProtocolError, "unsupported integration_policy"):
+            Task.from_mapping(valid_task(integration_policy="AUTO_MERGE"))
+
 
 if __name__ == "__main__":
     unittest.main()
