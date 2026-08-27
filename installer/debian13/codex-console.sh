@@ -3,6 +3,7 @@ set -eu
 
 service_user=vincent
 service_home=/var/lib/vincent
+service_runtime=/run/vincent
 
 while :; do
     printf '\033c'
@@ -20,6 +21,7 @@ while :; do
         sleep 5
         continue
     fi
+    install -d -o "$service_user" -g "$service_user" -m 0700 "$service_runtime"
     if [ ! -x /usr/local/bin/codex ]; then
         echo 'Codex is not installed yet.'
         echo 'Waiting for bootstrap...'
@@ -38,6 +40,7 @@ while :; do
         XDG_CONFIG_HOME="$service_home/.config" \
         XDG_CACHE_HOME="$service_home/.cache" \
         XDG_DATA_HOME="$service_home/.local/share" \
+        XDG_RUNTIME_DIR="$service_runtime" \
         PATH=/usr/local/bin:/usr/bin:/bin \
         /usr/local/bin/codex
     rc=$?

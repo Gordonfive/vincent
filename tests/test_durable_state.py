@@ -39,6 +39,26 @@ class DurableStateTests(unittest.TestCase):
         state = OperationalState(worker_id="worker-01", task_id="T", task_state="ACTIVE")
         self.assertEqual(recovery_action(state), RecoveryAction.RECONCILE_REMOTE)
 
+    def test_claim_intent_requires_remote_reconciliation(self):
+        state = OperationalState(
+            worker_id="worker-01",
+            task_id="T",
+            task_revision=1,
+            task_state="QUEUED",
+            claim_nonce="nonce",
+            claim_phase="INTENT",
+            source_commit="a" * 40,
+        )
+        self.assertEqual(recovery_action(state), RecoveryAction.RECONCILE_REMOTE)
+
+    def test_clear_removes_resolved_intent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "state.json"
+            store = DurableStateStore(path)
+            store.save(OperationalState(worker_id="worker-01"))
+            store.clear()
+            self.assertIsNone(store.load())
+
     def test_waiting_state_does_not_restart_execution(self):
         state = OperationalState(
             worker_id="worker-01", task_id="T", task_state="WAITING_FOR_HUMAN"

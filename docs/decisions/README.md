@@ -32,6 +32,7 @@ Architecture Decision Records (ADRs) are the authoritative record of consequenti
 | [ADR-0013](ADR-0013-dns-resolver-policy.md) | Accepted | Resolver policy avoids unnecessary dependence on a single provider |
 | [ADR-0014](ADR-0014-private-development-public-release.md) | Accepted | Development remains private until a deliberate public release |
 | [ADR-0015](ADR-0015-versioning-and-build-identifiers.md) | Accepted | Vincent, installer, and Mission Control use independent SemVer and build counters |
+| [ADR-0016](ADR-0016-rootless-container-runtime.md) | Accepted | Routine worker containers use rootless Podman instead of root-equivalent Docker-group access |
 
 ## Migrated legacy decisions
 

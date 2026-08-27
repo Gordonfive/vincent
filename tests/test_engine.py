@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from mission_control.claims import GitClaimStore
+from mission_control.claims import ClaimConflict, GitClaimStore
 from mission_control.discovery import GitTaskSource
 from mission_control.durable_state import DurableStateStore
 from mission_control.engine import WorkerEngine
@@ -39,16 +39,17 @@ class EngineTests(unittest.TestCase):
         git(self.root, "clone", "--branch", "main", str(remote), str(self.checkout))
         git(self.checkout, "config", "user.name", "Worker")
         git(self.checkout, "config", "user.email", "worker@example.invalid")
+        self.state = DurableStateStore(self.root / "state.json")
 
     def tearDown(self):
         self.temporary.cleanup()
 
-    def engine(self, executor):
+    def engine(self, executor, claims=None):
         return WorkerEngine(
             worker_id="worker-1", capabilities=frozenset(),
             source=GitTaskSource(self.checkout), task_repository=TaskRepository(self.checkout),
-            claims=GitClaimStore(self.checkout),
-            state=DurableStateStore(self.root / "state.json"), executor=executor,
+            claims=claims or GitClaimStore(self.checkout),
+            state=self.state, executor=executor, available_ram_gb=16,
         )
 
     def test_harmless_task_reaches_durable_completed_state(self):
@@ -57,7 +58,9 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(result.task.state, TaskState.COMPLETED)
         self.assertEqual(executor.invocations, 1)
         self.assertEqual(GitTaskSource(self.checkout).tasks()[0].state, TaskState.COMPLETED)
-        self.assertEqual(DurableStateStore(self.root / "state.json").load().task_state, "COMPLETED")
+        state = self.state.load()
+        self.assertEqual(state.task_state, "COMPLETED")
+        self.assertIsNone(state.claim_phase)
 
     def test_executor_failure_reaches_durable_failed_state(self):
         result = self.engine(MockExecutor(succeed=False)).run_once()
@@ -78,9 +81,53 @@ class EngineTests(unittest.TestCase):
         with self.assertRaises(KeyboardInterrupt):
             self.engine(InterruptedExecutor()).run_once()
         self.assertEqual(GitTaskSource(self.checkout).tasks()[0].state, TaskState.ACTIVE)
-        state = DurableStateStore(self.root / "state.json").load()
+        state = self.state.load()
         self.assertEqual(state.task_state, "ACTIVE")
         self.assertEqual(state.task_id, "MCP-701")
+
+    def test_ambiguous_claim_creation_preserves_preclaim_intent(self):
+        class AmbiguousClaims:
+            def create(self, claim):
+                raise RuntimeError("network outcome unknown")
+            def get(self, task_id):
+                return None
+            def verify(self, claim):
+                return False
+
+        with self.assertRaisesRegex(RuntimeError, "outcome unknown"):
+            self.engine(MockExecutor(), claims=AmbiguousClaims()).run_once()
+        state = self.state.load()
+        self.assertEqual(state.claim_phase, "INTENT")
+        self.assertEqual(state.task_state, "QUEUED")
+        self.assertTrue(state.claim_nonce)
+
+    def test_unverified_created_claim_preserves_remote_created_state(self):
+        class UnverifiedClaims:
+            def create(self, claim):
+                self.claim = claim
+                return claim
+            def get(self, task_id):
+                return getattr(self, "claim", None)
+            def verify(self, claim):
+                return False
+
+        result = self.engine(MockExecutor(), claims=UnverifiedClaims()).run_once()
+        self.assertIsNone(result)
+        state = self.state.load()
+        self.assertEqual(state.claim_phase, "REMOTE_CREATED")
+        self.assertEqual(state.task_state, "QUEUED")
+
+    def test_claim_conflict_clears_only_local_preclaim_intent(self):
+        class ConflictingClaims:
+            def create(self, claim):
+                raise ClaimConflict(claim.reference)
+            def get(self, task_id):
+                return None
+            def verify(self, claim):
+                return False
+
+        self.assertIsNone(self.engine(MockExecutor(), claims=ConflictingClaims()).run_once())
+        self.assertIsNone(self.state.load())
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ from mission_control.validation import ValidationCommand
 
 
 def task():
-    return Task.from_mapping({"schema_version": 1, "task_id": "MCP-801", "project_id": "platform", "repository": "owner/repo", "base_branch": "main", "objective": "Implement safely", "acceptance_criteria": ["unit tests pass"], "state": "QUEUED", "revision": 1, "created_at": "2026-08-24T00:00:00Z", "forbidden_actions": ["force push"]})
+    return Task.from_mapping({"schema_version": 1, "task_id": "MCP-801", "project_id": "platform", "repository": "owner/repo", "base_branch": "main", "objective": "Implement safely", "acceptance_criteria": ["unit tests pass"], "state": "QUEUED", "revision": 1, "created_at": "2026-08-24T00:00:00Z"})
 
 
 class FakeRunner:

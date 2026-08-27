@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -30,6 +31,24 @@ class ValidationResult:
     @property
     def passed(self) -> bool:
         return self.exit_status == 0 and not self.timed_out
+
+    def public_mapping(self) -> dict:
+        """Return validation evidence safe for durable coordination reports.
+
+        Captured output and raw command arguments remain local/in-memory evidence.
+        Either may contain credentials, private URLs, or other sensitive values.
+        Durable reports identify the command by a canonical SHA-256 instead.
+        """
+        command_bytes = json.dumps(list(self.argv), separators=(",", ":")).encode()
+        return {
+            "name": self.name,
+            "argv_sha256": hashlib.sha256(command_bytes).hexdigest(),
+            "started_at": self.started_at,
+            "completed_at": self.completed_at,
+            "exit_status": self.exit_status,
+            "timed_out": self.timed_out,
+            "output_sha256": self.output_sha256,
+        }
 
 
 def _now() -> str:

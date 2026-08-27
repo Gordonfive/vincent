@@ -7,6 +7,7 @@ service_home=/var/lib/vincent
 service_config=$service_home/.config
 service_cache=$service_home/.cache
 service_data=$service_home/.local/share
+service_runtime=/run/vincent
 # Canonical preserved Codex runtime: /opt/vincent-codex/bin/codex
 codex_root=/opt/vincent-codex
 
@@ -17,34 +18,31 @@ install -d -m 0700 "$HOME" "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME" "$XDG_DATA_HOME"
 
 install -d -o root -g "$service_user" -m 0750 "$status_root"
 install -d -o "$service_user" -g "$service_user" -m 0700 \
-    "$service_home" "$service_config" "$service_cache" "$service_data" "$service_home/.local/bin"
+    "$service_home" "$service_config" "$service_cache" "$service_data" "$service_home/.local/bin" "$service_runtime"
 
 service_run() {
     runuser -u "$service_user" -- env \
         HOME="$service_home" USER="$service_user" LOGNAME="$service_user" \
         XDG_CONFIG_HOME="$service_config" XDG_CACHE_HOME="$service_cache" \
-        XDG_DATA_HOME="$service_data" PATH=/usr/local/bin:/usr/bin:/bin "$@"
+        XDG_DATA_HOME="$service_data" XDG_RUNTIME_DIR="$service_runtime" \
+        PATH=/usr/local/bin:/usr/bin:/bin "$@"
 }
 
 apt-get update
-apt-get install -y ca-certificates curl gpg jq gh git network-manager iw wpasupplicant rfkill bubblewrap
-install -m 0755 -d /etc/apt/keyrings
+apt-get install -y \
+    ca-certificates curl gpg jq gh git network-manager iw wpasupplicant rfkill bubblewrap \
+    podman podman-docker uidmap slirp4netns passt fuse-overlayfs
+systemctl enable --now NetworkManager
 
-curl --fail --location --proto '=https' --tlsv1.2 https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-chmod a+r /etc/apt/keyrings/docker.asc
-cat >/etc/apt/sources.list.d/docker.sources <<'EOF'
-Types: deb
-URIs: https://download.docker.com/linux/debian
-Suites: trixie
-Components: stable
-Architectures: amd64
-Signed-By: /etc/apt/keyrings/docker.asc
-EOF
-
-apt-get update
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-systemctl enable --now docker NetworkManager
-usermod -aG docker "$service_user"
+# Rootless Podman needs subordinate UID/GID ranges. Do not grant the service
+# account access to a root-owned Docker daemon/socket; docker-compatible CLI
+# behavior is supplied by podman-docker and executes rootlessly as vincent.
+if ! grep -q "^${service_user}:" /etc/subuid; then
+    usermod --add-subuids 100000-165535 "$service_user"
+fi
+if ! grep -q "^${service_user}:" /etc/subgid; then
+    usermod --add-subgids 100000-165535 "$service_user"
+fi
 
 # Run the official Codex installer from Vincent's own protected cache. The
 # root-owned status directory is intentionally not used as an executable path
@@ -70,10 +68,10 @@ install -o root -g root -m 0755 "$codex_host" "$codex_root/bin/codex-code-mode-h
 ln -sfn "$codex_root/bin/codex" /usr/local/bin/codex
 ln -sfn "$codex_root/bin/codex-code-mode-host" /usr/local/bin/codex-code-mode-host
 
-docker version
-docker info
-docker run --rm hello-world
-service_run docker info
+podman --version
+docker --version
+[ "$(service_run podman info --format '{{.Host.Security.Rootless}}')" = true ]
+service_run podman run --rm docker.io/library/hello-world:latest >/dev/null
 gh --version
 bwrap --version
 codex --version
@@ -90,7 +88,9 @@ def output(*command):
 
 payload = {
     "schema_version": 1,
-    "docker": output("docker", "--version"),
+    "container_runtime": output("podman", "--version"),
+    "docker_compatible_cli": output("docker", "--version"),
+    "container_privilege_model": "rootless_podman",
     "github_cli": output("gh", "--version").splitlines()[0],
     "codex": output("codex", "--version"),
     "bubblewrap": output("bwrap", "--version"),

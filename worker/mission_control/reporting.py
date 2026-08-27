@@ -29,7 +29,9 @@ class CompletionReport:
     platform_version: str
 
     def to_json(self) -> str:
-        return json.dumps(asdict(self), sort_keys=True, indent=2) + "\n"
+        payload = asdict(self)
+        payload["validation"] = [result.public_mapping() for result in self.validation]
+        return json.dumps(payload, sort_keys=True, indent=2) + "\n"
 
     def to_markdown(self) -> str:
         checks = "\n".join(

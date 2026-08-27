@@ -5,7 +5,7 @@ report=/var/lib/vincent-install/self-test.json
 install -d -m 0700 /var/lib/vincent-install
 
 python3 - "$report" <<'PY'
-import json, os, pwd, re, subprocess, sys
+import grp, json, os, pwd, re, subprocess, sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -18,6 +18,19 @@ def run(name, command, predicate=lambda rc, out, err: rc == 0):
     ok = predicate(completed.returncode, completed.stdout, completed.stderr)
     checks.append({"name": name, "ok": bool(ok), "detail": output[:500]})
     return ok
+
+def run_as_vincent(name, command, predicate=lambda rc, out, err: rc == 0):
+    environment = [
+        "HOME=/var/lib/vincent",
+        "USER=vincent",
+        "LOGNAME=vincent",
+        "XDG_CONFIG_HOME=/var/lib/vincent/.config",
+        "XDG_CACHE_HOME=/var/lib/vincent/.cache",
+        "XDG_DATA_HOME=/var/lib/vincent/.local/share",
+        "XDG_RUNTIME_DIR=/run/vincent",
+        "PATH=/usr/local/bin:/usr/bin:/bin",
+    ]
+    return run(name, ["runuser", "-u", "vincent", "--", "env", *environment, *command], predicate)
 
 def record(name, ok, detail=""):
     checks.append({"name": name, "ok": bool(ok), "detail": str(detail)[:500]})
@@ -34,7 +47,13 @@ run("diagnostics_console", ["systemctl", "is-enabled", "--quiet", "vincent-diagn
 run("ssh_service", ["systemctl", "is-active", "--quiet", "ssh"])
 run("git", ["git", "--version"])
 run("github_cli", ["gh", "--version"])
-run("docker", ["docker", "info"])
+run_as_vincent(
+    "container_rootless",
+    ["podman", "info", "--format", "{{.Host.Security.Rootless}}"],
+    lambda rc, out, err: rc == 0 and out.strip() == "true",
+)
+run_as_vincent("container_smoke", ["podman", "run", "--rm", "docker.io/library/hello-world:latest"])
+run_as_vincent("docker_compatible_cli", ["docker", "--version"])
 run("bubblewrap", ["bwrap", "--version"])
 run("codex", ["codex", "--version"])
 record("codex_code_mode_host", os.path.isfile("/opt/vincent-codex/bin/codex-code-mode-host") and os.access("/opt/vincent-codex/bin/codex-code-mode-host", os.X_OK), "/opt/vincent-codex/bin/codex-code-mode-host")
@@ -64,8 +83,13 @@ except Exception as exc:
 try:
     account = pwd.getpwnam("vincent")
     record("service_account", account.pw_shell.endswith("nologin"), f"uid={account.pw_uid} home={account.pw_dir} shell={account.pw_shell}")
+    supplementary = {group.gr_name for group in grp.getgrall() if "vincent" in group.gr_mem}
+    primary = grp.getgrgid(account.pw_gid).gr_name
+    groups = supplementary | {primary}
+    record("no_root_equivalent_docker_group", "docker" not in groups, ",".join(sorted(groups)))
 except KeyError:
     record("service_account", False, "vincent account missing")
+    record("no_root_equivalent_docker_group", False, "vincent account missing")
 
 human_accounts = [entry.pw_name for entry in pwd.getpwall() if 1000 <= entry.pw_uid < 60000]
 record("no_human_login_accounts", not human_accounts, ",".join(human_accounts) or "none")

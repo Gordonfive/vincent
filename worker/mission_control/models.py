@@ -8,6 +8,7 @@ from typing import Any, Mapping
 
 
 SUPPORTED_SCHEMA_VERSION = 1
+SUPPORTED_INTEGRATION_POLICIES = {"HUMAN_APPROVAL_REQUIRED"}
 
 
 class ProtocolError(ValueError):
@@ -113,6 +114,10 @@ class Task:
         unattended = data.get("can_continue_unattended", False)
         if not isinstance(unattended, bool):
             raise ProtocolError("can_continue_unattended must be boolean")
+        if unattended:
+            raise ProtocolError(
+                "can_continue_unattended=true is not supported until automatic recovery policy is implemented"
+            )
 
         assigned = data.get("assigned_worker")
         if assigned is not None and (not isinstance(assigned, str) or not assigned.strip()):
@@ -121,6 +126,20 @@ class Task:
         criteria = _string_list(data, "acceptance_criteria")
         if not criteria:
             raise ProtocolError("acceptance_criteria must not be empty")
+
+        integration_policy = (
+            _required_text(data, "integration_policy")
+            if "integration_policy" in data
+            else "HUMAN_APPROVAL_REQUIRED"
+        )
+        if integration_policy not in SUPPORTED_INTEGRATION_POLICIES:
+            raise ProtocolError(f"unsupported integration_policy {integration_policy!r}")
+
+        forbidden_actions = _string_list(data, "forbidden_actions")
+        if forbidden_actions:
+            raise ProtocolError(
+                "forbidden_actions are not mechanically enforceable in protocol v1; use repository/task authority boundaries instead"
+            )
 
         task = cls(
             schema_version=version,
@@ -138,12 +157,8 @@ class Task:
             minimum_ram_gb=minimum_ram,
             priority=_required_text(data, "priority") if "priority" in data else "NORMAL",
             dependencies=_string_list(data, "dependencies"),
-            forbidden_actions=_string_list(data, "forbidden_actions"),
-            integration_policy=(
-                _required_text(data, "integration_policy")
-                if "integration_policy" in data
-                else "HUMAN_APPROVAL_REQUIRED"
-            ),
+            forbidden_actions=forbidden_actions,
+            integration_policy=integration_policy,
             can_continue_unattended=unattended,
             claim_worker_id=data.get("claim_worker_id"),
             claim_nonce=data.get("claim_nonce"),
