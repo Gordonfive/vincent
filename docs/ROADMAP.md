@@ -1,8 +1,8 @@
 # Vincent and Mission Control Roadmap
 
-**Roadmap updated:** 2026-08-26T13:40:00-08:00
+**Roadmap updated:** 2026-08-27T08:18:00-08:00
 
-This roadmap describes remaining work and milestones. Detailed decisions are in `docs/DECISIONS.md`; historical validation evidence belongs in `docs/reports/`; continuation state belongs in `docs/CONTINUATION_HANDOFF.md`.
+This roadmap describes remaining work and milestones. Detailed decisions are in `docs/DECISIONS.md`; agreed but unscheduled ideas are in `docs/PLANNED_FEATURES.md`; historical validation evidence belongs in `docs/reports/`; continuation state belongs in `docs/CONTINUATION_HANDOFF.md`.
 
 Agents retain the newest roadmap and decision timestamps incorporated and refresh only when those authoritative timestamps advance.
 
@@ -11,7 +11,9 @@ Agents retain the newest roadmap and decision timestamps incorporated and refres
 | Repository | Role |
 |---|---|
 | `Gordonfive/vincent` | Public generic Vincent worker platform and trusted upstream source for Vincent software/releases: installer, ISO tooling, first boot, self-checks, update logic, connection client, runtime, public documentation, tests, and releases. |
-| `Gordonfive/mission-control` | Private project/control repository for our deployment. It may supply assignments, project profiles, reports, and coordination state, but fresh Vincent does not know or require it by default. |
+| `Gordonfive/mission-control` | Currently private project/control repository and future Mission Control control-plane implementation area. Mission Control is planned as a self-hostable server application with web UI and authenticated API for enrollment, fleet state, authorization, assignments, leases, approvals, and reporting. Fresh Vincent remains independently functional and does not require Mission Control. |
+
+Mission Control's reusable application source is intended to become public if/when it becomes a distributable Vincent product. Our private deployment/fleet state must remain separate from public application source.
 
 ## Primary Workstream A — Complete consolidation and retire legacy repositories
 
@@ -58,6 +60,23 @@ Agents retain the newest roadmap and decision timestamps incorporated and refres
 
 **V1.1 network-installer objective:** a compatible older USB installer remains useful: online installation obtains the current approved Vincent release; offline installation uses its bundled release; both produce a worker whose immutable installer provenance and current Vincent software identity are accurately reported.
 
+## Mission Control product track
+
+Mission Control is planned as a self-hostable web control plane, not a desktop application or an exclusively Gordonfive-hosted website. Initial Git-backed coordination may continue while the workflow is proven. The eventual service should provide a browser UI, authenticated API, application service, and persistent data store.
+
+Planned progression:
+
+1. Define stable data models for worker identity, enrollment/trust, capabilities, assignments, leases, authorization scopes, approvals, results, and audit records while early coordination may remain Git-backed.
+2. Define the authenticated outbound Vincent-to-Mission-Control protocol; normal fleet operation should not require inbound worker management ports.
+3. Prove enrollment, revocation, worker inventory/capability reporting, assignment leasing, structured results, and fleet status with two or more workers.
+4. Implement the self-hostable Mission Control service/API and database once the proven workflow justifies replacing Git-backed operational state.
+5. Implement a responsive browser interface suitable for desktop and phone-first fleet control.
+6. Package Mission Control for straightforward self-hosting on Linux servers/VMs/VPSs and, where appropriate, containers/NAS environments.
+7. Separate reusable/public Mission Control application source from Gordonfive's private deployment configuration and fleet operational state before public distribution.
+8. Evaluate an optional hosted Mission Control service without weakening self-hosting as a first-class deployment model.
+
+Mission Control is not a general-purpose remote shell and does not replace SSH or normal Linux administration. Vincent remains capable of booting, self-diagnosing, maintaining itself, and updating from its trusted public upstream without Mission Control.
+
 ## Later milestones
 
 | Milestone | Outcome | Status |
@@ -66,9 +85,9 @@ Agents retain the newest roadmap and decision timestamps incorporated and refres
 | M1 | Generic worker reaches unassigned READY and completes one Git-assigned bounded task | In progress |
 | M2 | Worker recovery proven | Not started |
 | M3 | Universal installer proven | Prototype / in progress |
-| M4 | Two-worker Git coordination proven | Not started |
-| M5 | Phone-first control proven | Not started |
-| M6 | Dedicated Mission Control service/backend evaluated or proven | Deferred |
+| M4 | Two-worker Git coordination and assignment leasing proven | Not started |
+| M5 | Phone-first Mission Control interface/control proven | Not started |
+| M6 | Self-hostable Mission Control service/API/backend proven | Planned |
 | M7 | Multi-project operation proven | Not started |
 | M8 | Full operation recovery proven | Not started |
 
@@ -77,8 +96,11 @@ Agents retain the newest roadmap and decision timestamps incorporated and refres
 - Git is the durable technical authority; Project DNA is canonical intent.
 - Human judgment controls destructive hardware actions, production actions, credential scope, major architecture, and Project DNA changes.
 - Workers are replaceable and least-privileged.
-- Vincent is generic by default; private project/control sources are operator-selected after installation.
+- Vincent is generic by default; private project/control sources are operator-selected after installation unless the operator explicitly enrolls the worker into Mission Control.
+- Vincent remains independently capable of boot, diagnostics, maintenance, and trusted-upstream updates without Mission Control.
+- Mission Control governs managed-fleet enrollment, authorization, assignments, leases, policy, approvals, and operational reporting; it does not become a generic remote shell.
 - Vincent maintains Debian, its own software, runtime dependencies, and development toolchain while honoring active project version constraints.
 - The public Vincent upstream is the authoritative source for Vincent software updates; a fresh ISO is not the normal application-update mechanism.
 - Installer build identity and Vincent software identity are distinct lifecycle values and must never be conflated.
 - Public Vincent content never exposes private project/fleet state or secrets.
+- Public Mission Control application source and private deployment/fleet state must remain separate concerns.
