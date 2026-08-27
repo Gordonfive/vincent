@@ -11,14 +11,18 @@ def git(path, *args):
     return subprocess.run(["git", *args], cwd=path, text=True, capture_output=True, check=True).stdout.strip()
 
 
-def task(task_id, *, priority="NORMAL", assigned=None, capabilities=None):
-    return {
+def task(task_id, *, priority="NORMAL", assigned=None, capabilities=None, minimum_ram_gb=None, dependencies=None, state="QUEUED"):
+    payload = {
         "schema_version": 1, "task_id": task_id, "project_id": "platform",
         "repository": "owner/repo", "base_branch": "main", "objective": "Harmless task",
-        "acceptance_criteria": ["tests pass"], "state": "QUEUED", "revision": 1,
+        "acceptance_criteria": ["tests pass"], "state": state, "revision": 1,
         "created_at": "2026-08-24T00:00:00Z", "priority": priority,
         "assigned_worker": assigned, "required_capabilities": capabilities or [],
+        "dependencies": dependencies or [],
     }
+    if minimum_ram_gb is not None:
+        payload["minimum_ram_gb"] = minimum_ram_gb
+    return payload
 
 
 class DiscoveryTests(unittest.TestCase):
@@ -48,12 +52,36 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_synchronizes_and_orders_eligible_tasks(self):
         self.source.synchronize()
-        eligible = self.source.eligible("worker-1", frozenset({"python"}))
+        eligible = self.source.eligible("worker-1", frozenset({"python"}), available_ram_gb=16)
         self.assertEqual([item.task_id for item in eligible], ["HIGH", "LOW"])
 
     def test_missing_capability_excludes_task(self):
-        eligible = self.source.eligible("worker-1", frozenset())
+        eligible = self.source.eligible("worker-1", frozenset(), available_ram_gb=16)
         self.assertEqual([item.task_id for item in eligible], ["LOW"])
+
+    def test_insufficient_ram_excludes_task(self):
+        path = self.checkout / "coordination/tasks/RAM.json"
+        path.write_text(json.dumps(task("RAM", priority="CRITICAL", minimum_ram_gb=32)))
+        eligible = self.source.eligible("worker-1", frozenset({"python"}), available_ram_gb=16)
+        self.assertNotIn("RAM", [item.task_id for item in eligible])
+        eligible = self.source.eligible("worker-1", frozenset({"python"}), available_ram_gb=64)
+        self.assertEqual(eligible[0].task_id, "RAM")
+
+    def test_dependencies_must_be_completed(self):
+        tasks = self.checkout / "coordination/tasks"
+        (tasks / "BLOCKED.json").write_text(json.dumps(task("BLOCKED", priority="CRITICAL", dependencies=["PREREQ"])))
+        (tasks / "PREREQ.json").write_text(json.dumps(task("PREREQ", state="FAILED")))
+        eligible = self.source.eligible("worker-1", frozenset({"python"}), available_ram_gb=16)
+        self.assertNotIn("BLOCKED", [item.task_id for item in eligible])
+        (tasks / "PREREQ.json").write_text(json.dumps(task("PREREQ", state="COMPLETED")))
+        eligible = self.source.eligible("worker-1", frozenset({"python"}), available_ram_gb=16)
+        self.assertIn("BLOCKED", [item.task_id for item in eligible])
+
+    def test_unknown_dependency_blocks_task(self):
+        path = self.checkout / "coordination/tasks/BLOCKED.json"
+        path.write_text(json.dumps(task("BLOCKED", priority="CRITICAL", dependencies=["MISSING"])))
+        eligible = self.source.eligible("worker-1", frozenset({"python"}), available_ram_gb=16)
+        self.assertNotIn("BLOCKED", [item.task_id for item in eligible])
 
     def test_dirty_coordination_checkout_blocks_sync(self):
         (self.checkout / "evidence.log").write_text("preserve\n")
