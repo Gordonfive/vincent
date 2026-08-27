@@ -1,13 +1,19 @@
 [Unit]
-Description=Mission Control Codex Worker
+Description=Vincent Codex Worker
 After=network-online.target
 Wants=network-online.target
 ConditionPathExists=/etc/mission-control/worker.toml
 
 [Service]
 Type=simple
-User=mission-control
-Group=mission-control
+User=vincent
+Group=vincent
+Environment=HOME=/var/lib/vincent
+Environment=USER=vincent
+Environment=LOGNAME=vincent
+Environment=XDG_CONFIG_HOME=/var/lib/vincent/.config
+Environment=XDG_CACHE_HOME=/var/lib/vincent/.cache
+Environment=XDG_DATA_HOME=/var/lib/vincent/.local/share
 ExecStartPre=/opt/mission-control/venv/bin/mission-control-worker --config /etc/mission-control/worker.toml doctor
 ExecStart=/opt/mission-control/venv/bin/mission-control-worker --config /etc/mission-control/worker.toml serve
 Restart=on-failure
@@ -17,7 +23,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/lib/mission-control /srv/codex
+ReadWritePaths=/var/lib/vincent /srv/codex
 UMask=0077
 TimeoutStopSec=120
 

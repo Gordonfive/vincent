@@ -1,0 +1,15 @@
+[Unit]
+Description=Vincent first boot bootstrap
+After=network-online.target
+Wants=network-online.target
+Before=vincent-console-status.service vincent-codex-console.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/vincent-first-boot
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target

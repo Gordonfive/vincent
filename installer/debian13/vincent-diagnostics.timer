@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Vincent diagnostics periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+Persistent=true
+Unit=vincent-diagnostics.service
+
+[Install]
+WantedBy=timers.target
