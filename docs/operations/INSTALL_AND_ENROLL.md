@@ -1,49 +1,83 @@
-# Install and Enroll a Disposable Worker
+# Install and Connect a Vincent Worker
 
-This procedure stages software and generates a new identity. It does not authorize the worker or start unattended operation.
+This document describes the supported trust boundary after Vincent software is installed. It does not authorize destructive installation/flashing and does not grant project/fleet authority merely because a worker exists.
 
-## Preconditions
+See [`BUILD_AND_FLASH_USB.md`](BUILD_AND_FLASH_USB.md) for image/media operations and [`../decisions/ADR-0001-standalone-generic-worker.md`](../decisions/ADR-0001-standalone-generic-worker.md) for the standalone READY model.
 
-- Linux host with Python 3.11 or newer, Git, OpenSSH client tools, and systemd.
-- A locally verified checkout of the public `Gordonfive/vincent` platform repository.
-- Console or other trusted access to compare the generated fingerprint.
-- No operational project credential embedded in the checkout or installer.
+## Expected post-install state
 
-## Staging
+A successful fresh Vincent installation should establish:
 
-Run the installer as root and provide the absolute verified checkout path:
+- Debian and Vincent runtime prerequisites;
+- dedicated locked `vincent` Unix service identity;
+- local worker identity/provenance;
+- self-tests, status and diagnostics;
+- network state/recovery interfaces;
+- no private project/fleet/AI-provider authority by default;
+- **READY / unassigned** state independent of Mission Control.
 
-```text
-sudo ./installer/install.sh /absolute/path/to/vincent
-```
+A conventional human installer account is not required for normal Vincent operation.
 
-The installer creates the locked `mission-control` service account, isolated state/workspace directories, a Python virtual environment, example configuration, and a disabled systemd unit. It then generates a unique Ed25519 installation identity and prints the public enrollment request.
+## Standalone project connection
 
-## Initial trust
+For Vincent V1 standalone operation, the operator selects the project/Git/control source after installation.
 
-Initial trust is established only when the owner compares the enrollment request fingerprint through a trusted channel and deliberately authorizes that specific `worker_id`. Merely possessing the installer or creating a request grants no repository access.
+The connection workflow must preserve these boundaries:
 
-After approval, an enrollment authority supplies narrowly scoped operational authorization outside Git. The approval record may be committed, but private keys, tokens, and Codex credentials must not be committed.
+1. Operator supplies/selects the intended repository/project source.
+2. Authentication uses a supported interactive/scoped mechanism appropriate to that source.
+3. Vincent verifies the intended repository/remote and records only non-secret connection metadata.
+4. Project requirements/dependency constraints are loaded before environment preparation.
+5. A bounded assignment identifies objective, allowed scope, acceptance criteria, and result/report destination.
+6. Vincent prepares an isolated workspace/environment, performs the task, validates results, publishes durable project artifacts, verifies remote publication, and reports outcome.
 
-## Activation gate
+Do not place repository credentials/tokens/private keys in Git, task text, status output or ordinary reports.
 
-Before enabling the service:
+## AI-provider enrollment
 
-1. Replace example values in `/etc/mission-control/worker.toml`.
-2. Install approved per-worker Git authorization through the selected secret-delivery mechanism.
-3. Complete supported Codex authentication for the service account.
-4. Run `mission-control-worker --config /etc/mission-control/worker.toml doctor`.
-5. Confirm the reported worker ID and all readiness checks.
-6. Enable the service only after owner approval is durable.
+AI-provider authentication is separate from Git/project authorization.
 
-The current M1 unit is a readiness oneshot, not an autonomous task loop.
+Vincent performs provider-specific enrollment through the selected provider adapter. For human-bound accounts, use the provider's supported device/interactive authorization when available rather than copying reusable credentials through Git or project instructions.
 
-## Reinstallation and recovery
+Where supported, verify/report non-secret effective provider identity/account/organization/tenant/project context and authentication health before executing work. If the active provider identity clearly does not match the intended profile, stop/surface the mismatch instead of silently continuing.
 
-The installer refuses to reuse an existing identity. Do not delete evidence automatically. Decide explicitly whether this is:
+Provider credentials remain in protected provider/OS credential storage and are excluded from logs/diagnostics/reports/Git.
 
-- recovery of the same authorized installation, using a separately documented protected backup;
-- replacement by a new identity followed by revocation of the old worker; or
-- forensic preservation of an unexpected installation state.
+## Mission Control fleet enrollment
 
-Replacement is the default disposable-worker path.
+Mission Control is optional. A standalone READY worker does not contact/trust the private fleet automatically.
+
+When the operator chooses managed-fleet enrollment:
+
+1. Vincent exposes/generates the worker enrollment identity/request required by the current protocol.
+2. Operator/Mission Control verifies and explicitly approves the worker identity.
+3. Scoped/revocable fleet authorization is delivered outside ordinary Git state.
+4. Vincent establishes authenticated outbound control-plane communication.
+5. Mission Control may assign roles/scopes, bounded tasks/leases, and desired AI-provider identity/profile policy.
+6. Vincent continues to enforce its local product/safety requirements and project requirements while following valid managed-fleet authority.
+
+Revoking/suspending a worker must not require distributing or rotating a shared fleet-wide credential.
+
+## Protected local identity and reinstallation
+
+Do not casually delete or regenerate a currently authorized worker identity during troubleshooting.
+
+A deliberate reinstall normally creates a new local worker identity. The old identity/credentials should be revoked/retired according to the relevant project/Mission Control procedure unless a separately designed supported identity-recovery mechanism explicitly restores it.
+
+Worker replacement is preferred over copying an entire old worker disk as a normal recovery mechanism.
+
+## Verification before bounded work
+
+Before starting real work, verify at least:
+
+- worker self-test/health/status;
+- installer provenance and current Vincent software version are visible separately;
+- network/DNS/HTTPS/project/provider diagnostics are healthy enough for the assignment;
+- selected project remote/source is correct;
+- project constraints are loaded;
+- required Git authorization works at the intended scope;
+- selected AI provider is installed/enrolled and effective identity is acceptable where verifiable;
+- task ownership/authorization is current;
+- workspace is clean/isolated or unexpected state has been explicitly preserved/escalated.
+
+Do not interpret a successful local setup command as authorization to perform production, destructive external, credential-expanding or protected integration actions.
