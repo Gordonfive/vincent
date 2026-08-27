@@ -28,6 +28,10 @@ Architecture Decision Records (ADRs) are the authoritative record of consequenti
 | [ADR-0009](ADR-0009-runtime-network-resilience.md) | Accepted | Wired/Wi-Fi failover and layered diagnostics are worker requirements |
 | [ADR-0010](ADR-0010-network-installer.md) | Proposed | Compatible installers may fetch the current approved Vincent release |
 | [ADR-0011](ADR-0011-ai-provider-adapter-enrollment.md) | Accepted | Provider-neutral adapters; Vincent performs provider-specific local enrollment |
+| [ADR-0012](ADR-0012-generic-worker-baseline.md) | Accepted | Generic worker baseline excludes project-specific tooling |
+| [ADR-0013](ADR-0013-dns-resolver-policy.md) | Accepted | Resolver policy avoids unnecessary dependence on a single provider |
+| [ADR-0014](ADR-0014-private-development-public-release.md) | Accepted | Development remains private until a deliberate public release |
+| [ADR-0015](ADR-0015-versioning-and-build-identifiers.md) | Accepted | Vincent, installer, and Mission Control use independent SemVer and build counters |
 
 ## Migrated legacy decisions
 

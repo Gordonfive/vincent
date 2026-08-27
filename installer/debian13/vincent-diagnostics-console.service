@@ -1,0 +1,19 @@
+[Unit]
+Description=Vincent diagnostics console on tty4
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/vincent-diagnostics-console
+StandardInput=tty
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/tty4
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
