@@ -78,9 +78,11 @@ Loss of a worker must not imply loss of authoritative project work.
 
 ## Privilege boundary
 
-The `vincent` service identity is the normal automation principal. It is locked/non-human and does not receive unrestricted sudo.
+The `vincent` service identity is the normal automation principal. It is locked/non-human and does not receive unrestricted sudo or membership in the root-equivalent host Docker group.
 
-Privileged system operations use narrow root-owned helpers/systemd services/interfaces. Human administrative/recovery access is separate. Project processes/containers should receive only the credentials/capabilities they actually require where practical.
+Routine project containers use rootless Podman under the `vincent` identity as defined by ADR-0016. A small container-namespace bootstrap service may invoke the standard subordinate-UID/GID helpers required to establish the rootless user namespace before the more restricted worker service starts. The worker service itself retains `NoNewPrivileges=true` and does not receive a root-owned container daemon socket.
+
+Other privileged system operations use narrow root-owned helpers/systemd services/interfaces. Human administrative/recovery access is separate. Project processes/containers should receive only the credentials/capabilities they actually require where practical.
 
 ## Installer safety boundary
 
