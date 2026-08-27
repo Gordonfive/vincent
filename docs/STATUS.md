@@ -75,8 +75,6 @@ The documentation cleanup/reorganization gate is complete on `main`:
 - repository validation checks canonical documents, requirement/ADR IDs, links, release-safety boundaries, historical traceability, and credential patterns;
 - active canonical documentation contains no `GitBoy` references.
 
-ADR-0014 keeps the repository private during active development until a deliberate public-release gate is approved.
-
 ## Validation
 
 Documentation-reset validation on PR #12 passed:
@@ -89,8 +87,8 @@ The reconciled installer implementation passed repository validation before inte
 
 ## Next technical gate
 
-1. Resolve any QA blockers that prevent build `0022` from completing a fresh private-development bootstrap.
-2. Build Vincent Installer `0.1.0` build `0022` from the resulting exact accepted `main` commit.
+1. Resolve QA blockers that prevent a fresh installer from completing first boot reliably without depending on re-fetching its bundled Vincent payload.
+2. Build the next Vincent Installer `0.1.0` candidate from the resulting exact accepted `main` commit.
 3. Execute the carried-forward physical regression/verification issues on the laptop and workstation as applicable.
 4. Close, retain, or reclassify each historical bug based on current evidence.
 
