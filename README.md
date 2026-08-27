@@ -10,8 +10,6 @@ A fresh Vincent installation is independently functional. It can install, boot, 
 
 Mission Control is a separate optional control-plane product for managed fleets. Project repositories remain authoritative for their own source, requirements, instructions, tests, and durable project artifacts.
 
-Vincent is currently developed in a **private repository** under [ADR-0014](docs/decisions/ADR-0014-private-development-public-release.md). It is intended for a later deliberate public/open-source release after the required release-content and security review.
-
 ## Documentation
 
 Start with:
@@ -31,7 +29,7 @@ The overall Vincent + Mission Control program roadmap is owned by the private Mi
 
 ## Repository boundary
 
-This repository owns reusable Vincent software and public-release-safe documentation, including:
+This public repository owns reusable Vincent software and public-safe documentation, including:
 
 - Debian installer/ISO tooling and reproducible build inputs;
 - first-boot and local runtime components;
