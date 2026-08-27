@@ -29,6 +29,7 @@ Conceptually:
 - structured task results and audit history;
 - human approval gates for destructive, production, credential-expanding, release, and other sensitive actions;
 - fleet policy such as minimum Vincent versions, update channels, staged adoption, or temporary pins without replacing Vincent's own update mechanism;
+- assignment of AI provider identity profiles describing the desired provider plus account/organization/project context and authorization policy, while Vincent performs provider-specific enrollment;
 - eventual selection of appropriate worker and AI-agent combinations based on assignment requirements and worker capabilities.
 
 Mission Control should not become a general-purpose remote shell or replacement for SSH/Linux administration. Normal worker communication should be initiated outbound by Vincent over an authenticated network protocol so workers can operate behind NAT and ordinary firewalls without requiring inbound management ports.
@@ -96,6 +97,10 @@ Vincent should eventually be an AI-worker platform rather than a platform couple
 - Vincent installs the selected agent and its required prerequisites rather than requiring every possible agent stack in the base image.
 - Agent-specific installation and configuration should be isolated behind a provider/adapter interface so Vincent's core does not become dependent on one vendor.
 - Agent definitions should describe prerequisites, installation/update procedures, runtime requirements, authentication/enrollment requirements, capabilities, health checks, and removal/replacement procedures.
+- Mission Control may assign an enrolled worker an AI identity profile defining the provider and intended account, organization, tenant, project, or equivalent context. Vincent performs the supported provider-specific authorization flow locally and reports only non-secret identity/scope metadata and health state.
+- For Codex, supported ChatGPT/device authorization is the preferred initial human enrollment path where available. Future adapters may use OAuth/device authorization, SSO/browser authorization, scoped API/service credentials, or no remote credentials for local-model agents.
+- If the provider cannot automatically select or enforce the intended account/project, Vincent should verify the resulting context where possible and surface mismatch/blocked state rather than silently continuing with an unintended identity.
+- Authentication material must remain outside Git. Future unattended enrollment should use a separately protected secret backend/broker or one-time delivery mechanism and issue unique, scoped, revocable credentials rather than shared fleet-wide secrets.
 - Containerized/Docker-based agents should be supported where appropriate because container isolation can simplify dependency management and make adding or replacing agent implementations easier.
 - Native/non-containerized agents must remain possible where containers are inappropriate or unsupported.
 - Hardware/resource discovery may eventually influence which agents Vincent offers or recommends, particularly for local-model workers requiring significant CPU, RAM, storage, or GPU resources.
