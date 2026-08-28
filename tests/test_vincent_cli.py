@@ -15,7 +15,7 @@ class VincentCliTests(unittest.TestCase):
     @patch("mission_control.vincent_cli.urllib.request.urlopen")
     def test_public_bootstrap_policy_is_validated(self, urlopen, load):
         urlopen.return_value = Response()
-        load.return_value = {"schema_version": 1, "product": "Vincent", "bootstrap_repository": "Gordonfive/vincent", "platform_repository": "Gordonfive/vincent"}
+        load.return_value = {"schema_version": 1, "product": "Vincent", "bootstrap_repository": "logrusbox/vincent", "platform_repository": "logrusbox/vincent"}
         self.assertEqual(vincent_cli.load_instructions()["product"], "Vincent")
 
     @patch("mission_control.vincent_cli.json.load")
