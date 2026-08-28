@@ -84,7 +84,7 @@ The documentation cleanup/reorganization gate is complete on `main`:
 - ADRs replace the old mixed decision register;
 - permanent project-start, continuation-handoff, planned-feature, and permanent bug-register documents are retired;
 - GitHub issues are the unscheduled backlog and current bug/verification tracker;
-- CIC Station owns the overall program roadmap; Vincent roadmap is product-specific;
+- `logrusbox/vincent-program` owns the overall program roadmap, cross-product integration issues, and program governance; Vincent roadmap is product-specific;
 - migration/reset/prototype reports have been removed from the active tree after distillation;
 - independent SemVer, `CHANGELOG.md`, contribution workflow, PR template, and trunk/squash conventions are established;
 - repository validation checks canonical documents, requirement/ADR IDs, links, release-safety boundaries, historical traceability, and credential patterns;
