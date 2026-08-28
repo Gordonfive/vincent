@@ -12,6 +12,7 @@ This file records temporary/current implementation and validation state. It is n
 - Accepted independent version/build identity is preserved in ADR-0015 as amended by ADR-0018: Vincent `0.1.0` and installer `0.1.0` use independent monotonic build counters whose separation point was `0022`.
 - The current QA-cleanup candidate advances both the Vincent runtime and installer counters to build `0023` because the change affects both components. Equal counter values are coincidental and do not make the counters shared.
 - ADR-0017 supersedes the earlier private-development visibility policy: Vincent may be developed in a public repository before stable release; repository visibility is separate from release readiness.
+- Managed-worker roadmap semantics are aligned with CIC Station ADR-0017: scheduling/availability, liveness/health, execution, and power are independent facts; Working/Available/Offline/Standby are derived operator-facing summaries.
 
 Branch policy: `main` is the only permanent branch; temporary PR branches are deleted after integration or supersession once useful work is preserved.
 
@@ -41,7 +42,9 @@ Known implementation/design debt is tracked in GitHub rather than hidden in stat
 - #37 — make standalone READY a real first-boot state independent of optional CIC Station enrollment;
 - #38 — introduce the required provider-neutral adapter boundary while retaining Codex as the first implementation;
 - #39 — enforce managed-worker authorization/repository scopes before execution;
-- #47 — bound provider execution with supervisor deadlines/interruption handling.
+- #47 — bound provider execution with supervisor deadlines/interruption handling;
+- #48 — isolate AI/task execution from CIC Station worker identity, supervisor secrets, and unrelated project/provider credentials;
+- #49 — future explicitly authorized zero-touch/PXE-style provisioning mode, intentionally outside the 1.0 interactive installer path.
 
 ## Carried-forward physical-test state
 
@@ -104,9 +107,9 @@ Physical validation of installer build `0023` remains pending and must correspon
 
 ## Next technical gates
 
-1. Integrate the bounded QA cleanup and prove the build-0023 ISO workflow succeeds from exact `main` source.
+1. Prove the build-0023 ISO workflow and physical installer/runtime behavior from exact `main` source.
 2. Resolve #27 and #37 so the bundled Vincent payload and standalone READY lifecycle no longer require unnecessary GitHub/fleet enrollment dependencies.
-3. Resolve the pre-1.0 runtime architecture/authority blockers, including #38, #39, and #47.
+3. Resolve the pre-1.0 runtime architecture/authority blockers, including #38, #39, #47, and #48.
 4. Build the next physical-test candidate from an exact accepted `main` commit and execute the carried-forward laptop/workstation regression issues.
 5. Close, retain, or reclassify each historical bug based on current physical evidence.
 
