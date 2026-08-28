@@ -1,6 +1,6 @@
 # Vincent Architecture
 
-Vincent is the worker-side product. Mission Control is a separate optional fleet control plane. Project repositories remain authoritative for project-specific source, requirements, instructions, tests, constraints, and durable project artifacts.
+Vincent is the worker-side product. CIC Station is a separate optional fleet control plane. Project repositories remain authoritative for project-specific source, requirements, instructions, tests, constraints, and durable project artifacts.
 
 See [`PRODUCT.md`](PRODUCT.md), [`REQUIREMENTS.md`](REQUIREMENTS.md), and the [`decisions/`](decisions/) ADRs for normative product/decision context.
 
@@ -12,10 +12,10 @@ See [`PRODUCT.md`](PRODUCT.md), [`REQUIREMENTS.md`](REQUIREMENTS.md), and the [`
 | **Vincent local runtime** | Worker identity, service lifecycle, status, diagnostics, networking recovery, project/workspace preparation, bounded execution, validation/reporting, maintenance, updates |
 | **AI-provider adapter** | Provider-specific installation, enrollment/authentication integration, identity/health checks, runtime invocation |
 | **Project/control source** | Project requirements, repository instructions, dependency constraints, bounded assignment input, result/report destination |
-| **Mission Control client boundary** | Authenticated outbound managed-fleet protocol when explicitly enrolled |
-| **Mission Control** | Separate control plane for fleet trust, inventory, authorization, assignments/leases, approvals, fleet policy, AI identity profiles and operational reporting |
+| **CIC Station client boundary** | Authenticated outbound managed-fleet protocol when explicitly enrolled |
+| **CIC Station** | Separate control plane for fleet trust, inventory, authorization, assignments/leases, approvals, fleet policy, AI identity profiles and operational reporting |
 
-Vincent's local runtime must not expose internal names that imply it is itself Mission Control. `Mission Control` is reserved for the separate control-plane product/integration surface.
+Vincent's local runtime must not expose internal names that imply it is itself CIC Station. `CIC Station` is reserved for the separate control-plane product/integration surface.
 
 ## Standalone lifecycle
 
@@ -27,22 +27,22 @@ A fresh/standalone worker follows this lifecycle:
 4. Debian/Vincent are installed without reusable private credentials or permanent fleet identity.
 5. First boot establishes local worker identity and the dedicated `vincent` service account/runtime.
 6. Self-tests, network/health checks and diagnostics run.
-7. Worker reaches **READY / unassigned** without Mission Control.
+7. Worker reaches **READY / unassigned** without CIC Station.
 8. Operator selects/authenticates an allowed project/Git/control source and an AI provider as required by the workflow.
 9. Vincent reads project constraints, prepares an isolated task environment, executes bounded work through the selected provider, validates results, publishes durable work/results, and returns to an idle/ready state.
 
 ## Managed-fleet lifecycle
 
-When the operator explicitly enrolls Vincent into Mission Control:
+When the operator explicitly enrolls Vincent into CIC Station:
 
 1. Vincent presents/generates a worker identity/enrollment request.
-2. Mission Control/operator approves trust and scope.
+2. CIC Station/operator approves trust and scope.
 3. Vincent establishes authenticated outbound control-plane communication.
 4. Vincent reports non-secret worker inventory/capabilities/health/version data.
-5. Mission Control may assign a bounded task/lease, repository/project scope, and desired AI-provider identity/profile policy.
+5. CIC Station may assign a bounded task/lease, repository/project scope, and desired AI-provider identity/profile policy.
 6. Vincent performs any provider-specific local enrollment through its adapter and verifies non-secret effective identity/scope where supported.
 7. Vincent executes only work whose current lease/authorization/project constraints are valid.
-8. Structured state/results/approval requests return to Mission Control while source/project artifacts remain in their project authorities.
+8. Structured state/results/approval requests return to CIC Station while source/project artifacts remain in their project authorities.
 9. Revocation, lease loss or authority mismatch causes stop/block behavior rather than silent continuation.
 
 Normal fleet operation is outbound from the worker and does not require a general inbound remote-shell interface.
@@ -55,7 +55,7 @@ Normal fleet operation is outbound from the worker and does not require a genera
 - project requirements/instructions;
 - accepted ADRs/product requirements;
 - published task results/reports;
-- Mission Control managed-fleet trust/authorization/assignment/audit state where applicable;
+- CIC Station managed-fleet trust/authorization/assignment/audit state where applicable;
 - release artifacts/metadata;
 - required development fixtures through the project's chosen authoritative mechanism.
 
@@ -102,7 +102,7 @@ The core worker lifecycle is provider-neutral. Provider adapters describe/instal
 
 Codex is the initial implementation target, but the interface must permit future Gemini, Copilot, Ollama/local-model and custom-agent providers without redesigning worker identity/task/recovery concepts.
 
-Mission Control may select an intended provider/account/project profile; Vincent remains responsible for actual provider-specific local enrollment/runtime behavior.
+CIC Station may select an intended provider/account/project profile; Vincent remains responsible for actual provider-specific local enrollment/runtime behavior.
 
 Provider credentials are never normal Git state and shared fleet-wide AI credentials are prohibited.
 
@@ -114,4 +114,4 @@ Vincent also maintains Debian/runtime/development tooling subject to active proj
 
 ## Optional human interfaces
 
-VS Code/VSCodium or other interfaces may be installed for human convenience, but Vincent and Mission Control architecture must not depend on them. A headless worker retains full supported worker functionality.
+VS Code/VSCodium or other interfaces may be installed for human convenience, but Vincent and CIC Station architecture must not depend on them. A headless worker retains full supported worker functionality.
