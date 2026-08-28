@@ -25,7 +25,7 @@ Start with:
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — development and repository workflow
 - [`SECURITY.md`](SECURITY.md) — security reporting and repository security rules
 
-The overall Vincent + CIC Station program roadmap is owned by `logrusbox/cic-station`. This repository's roadmap covers Vincent only.
+The overall Vincent + CIC Station program roadmap, cross-product integration issues, and program governance are owned by [`logrusbox/vincent-program`](https://github.com/logrusbox/vincent-program). This repository's roadmap covers Vincent only.
 
 ## Repository boundary
 
