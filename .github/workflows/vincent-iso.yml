@@ -41,7 +41,7 @@ jobs:
 
             sh installer/debian13/build-image.sh "$source_iso" "$output_iso"
             sh installer/debian13/inspect-image.sh "$output_iso"
-            (cd dist && sha256sum --check "$(basename "$output_iso").sha256")
+            sha256sum --check "$output_iso.sha256"
             sha256sum "$output_iso"
 
             python3 - "$output_iso" "$source_commit" "$build_number" <<'PY'
