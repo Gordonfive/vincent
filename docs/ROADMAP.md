@@ -1,6 +1,6 @@
 # Vincent Product Roadmap
 
-This roadmap covers **Vincent only**. The private Mission Control program repository owns the overall Vincent + Mission Control program roadmap and cross-product milestones.
+This roadmap covers **Vincent only**. The CIC Station program repository owns the overall Vincent + CIC Station program roadmap and cross-product milestones.
 
 Normative product intent and requirements live in [`PRODUCT.md`](PRODUCT.md) and [`REQUIREMENTS.md`](REQUIREMENTS.md). Consequential design choices live in [`decisions/`](decisions/). Current implementation/physical-test state lives in [`STATUS.md`](STATUS.md). Unscheduled ideas belong in GitHub issues rather than a permanent planned-features document.
 
@@ -88,12 +88,15 @@ Planned lifecycle improvements after the 1.0 foundation:
 
 Required behavior for workers enrolled in CIC Station:
 
-- an enrolled worker that is marked **Available** remains logically awake, network-reachable, and able to check for assignments, renew leases, report health, and receive control-plane instructions;
+- managed worker state is multidimensional: Vincent reports locally observable execution, health/connectivity, and power facts while CIC Station owns managed scheduling/availability policy and derives fleet-level interpretation;
+- **Working**, **Available**, **Offline**, and future **Standby** remain useful operator-facing summary labels, but are derived statuses rather than one canonical mutually exclusive worker-state enum;
+- an enrolled worker whose scheduling state permits new work and whose derived status is **Available** remains logically awake, network-reachable, and able to check for assignments, renew leases, report health, and receive control-plane instructions;
 - ordinary system suspend/hibernate must not make an Available worker unreachable;
 - while Available and idle, Vincent should rely on normal Linux hardware power management such as CPU frequency scaling/deep idle states, display power-off, storage power management where safe, and GPU/runtime power management rather than keeping hardware at full performance;
-- initial managed worker states are **Working**, **Available**, and **Offline**;
-- a future **Standby** state may use suspend or deeper power saving only when a reliable remote-wake mechanism such as Wake-on-LAN, IPMI, AMT, smart-PDU control, or equivalent has been implemented and validated;
-- CIC Station must not assign work to a worker known to be Offline or to a future Standby worker unless the corresponding wake path is available and successful.
+- maintenance/drain/disabled scheduling state is independent of liveness: an online healthy worker may intentionally reject new work;
+- degraded/unreachable health is independent of execution intent: CIC Station must not infer availability merely because the worker is configured to accept work;
+- a future **Standby** derived status may use suspend or deeper power saving only when a reliable remote-wake mechanism such as Wake-on-LAN, IPMI, AMT, smart-PDU control, or equivalent has been implemented and validated;
+- CIC Station must not assign work to a worker whose scheduling, health, or power state makes execution unsafe or unavailable, and must not assign to a future Standby worker unless the corresponding wake path is available and successful.
 
 ## Later Vincent product work
 
@@ -104,7 +107,7 @@ Later work is tracked as GitHub issues and promoted into this roadmap only when 
 - improved local environment/profile management;
 - additional supported Linux/base environments when real requirements justify them;
 - stronger recovery/diagnostic automation;
-- Vincent-side implementation of stable Mission Control protocols as the control-plane product matures.
+- Vincent-side implementation of stable CIC Station protocols as the control-plane product matures.
 
 ## Permanent roadmap constraints
 
@@ -112,6 +115,6 @@ Later work is tracked as GitHub issues and promoted into this roadmap only when 
 - Human/operator approval remains required for destructive hardware actions, production actions, credential expansion and major product/architecture changes.
 - Workers are replaceable and least-privileged, but productive hardware is not destroyed merely to demonstrate replaceability outside an explicit acceptance test.
 - Public Vincent content never contains private fleet/project state or reusable secrets.
-- Mission Control is optional for basic Vincent health/maintenance/update operation.
+- CIC Station is optional for basic Vincent health/maintenance/update operation.
 - Routine Vincent software updates do not rewrite immutable installer provenance.
 - Complexity is added to solve demonstrated requirements, not to maximize the appearance of autonomy.
