@@ -1,6 +1,6 @@
 # Vincent Agent Instructions
 
-These instructions apply to coding/AI agents working in `Gordonfive/vincent`.
+These instructions apply to coding/AI agents working in `logrusbox/vincent`.
 
 ## Start order
 
@@ -22,7 +22,7 @@ Do not depend on historical chat, permanent handoff files, retired product-inten
 - Product intent and boundaries live in `docs/PRODUCT.md`.
 - Stable requirements live in `docs/REQUIREMENTS.md`; requirement IDs are permanent after merge.
 - Consequential architecture decisions live in ADRs under `docs/decisions/`.
-- The private Mission Control program repository owns the overall program roadmap; this repository owns Vincent product behavior only.
+- CIC Station owns the overall Vincent + CIC Station program roadmap; this repository owns Vincent product behavior only.
 - The operator retains final authority over destructive hardware actions, credentials/scopes, production, major architecture/product changes and other high-impact actions.
 - Never commit private keys, passwords, access tokens, authentication caches, Wi-Fi passphrases, AI-provider credentials, reusable enrollment secrets, private fleet state or production secrets/data.
 - Never flash/erase hardware without the applicable exact-target/operator authorization gate.
@@ -33,7 +33,7 @@ Do not depend on historical chat, permanent handoff files, retired product-inten
 
 Vincent is public/reusable worker software. It contains installer/ISO tooling, first boot/runtime, worker status/diagnostics/network recovery, update/maintenance logic, Git/project connection, AI-provider adapters, tests, public-safe docs and releases.
 
-Mission Control is a separate optional fleet control plane. Worker-local packages/services/paths must use Vincent-local terminology; reserve `Mission Control` for the actual control-plane product/integration surface.
+CIC Station is a separate optional fleet control plane. Worker-local packages/services/paths must use Vincent-local terminology; reserve `CIC Station` for the actual control-plane product/integration surface.
 
 ## Development workflow
 
@@ -54,7 +54,7 @@ Mission Control is a separate optional fleet control plane. Worker-local package
 - Prefer standard Debian/systemd/Git/SSH/container/OS logging mechanisms over custom infrastructure when they solve the requirement.
 - Vincent uses the dedicated locked `vincent` service identity for normal automation and narrow privileged helpers for root-required operations.
 - Installer storage/network choices remain operator-controlled; the active installer medium must be excluded from installation targets.
-- A fresh Vincent installation reaches standalone READY without Mission Control/private credentials.
+- A fresh Vincent installation reaches standalone READY without CIC Station/private credentials.
 - Codex is the initial AI provider, but provider-specific behavior belongs behind the provider adapter boundary.
 - Provider/Git/fleet credentials never belong in ordinary Git/task/report state.
 - Vincent software uses independent SemVer; installer build numbers are separate immutable provenance values.
