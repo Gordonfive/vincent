@@ -13,6 +13,7 @@ Before consequential work, read:
 5. `docs/STATUS.md`
 6. the relevant `docs/ROADMAP.md`, ADRs, architecture, operations/protocols and active issues/PRs for the task
 7. `SECURITY.md`
+8. `logrusbox/vincent-program` when the task has cross-product implications
 
 Do not depend on historical chat, permanent handoff files, retired product-intent documents, project-start documents, planned-feature files, or migration reports as current authority.
 
@@ -21,8 +22,8 @@ Do not depend on historical chat, permanent handoff files, retired product-inten
 - Git on `main` is the durable technical authority after accepted integration.
 - Product intent and boundaries live in `docs/PRODUCT.md`.
 - Stable requirements live in `docs/REQUIREMENTS.md`; requirement IDs are permanent after merge.
-- Consequential architecture decisions live in ADRs under `docs/decisions/`.
-- CIC Station owns the overall Vincent + CIC Station program roadmap; this repository owns Vincent product behavior only.
+- Consequential Vincent architecture decisions live in ADRs under `docs/decisions/`.
+- `logrusbox/vincent-program` owns the overall Vincent + CIC Station program roadmap, cross-product integration issues, and program governance; this repository owns Vincent product behavior only.
 - The operator retains final authority over destructive hardware actions, credentials/scopes, production, major architecture/product changes and other high-impact actions.
 - Never commit private keys, passwords, access tokens, authentication caches, Wi-Fi passphrases, AI-provider credentials, reusable enrollment secrets, private fleet state or production secrets/data.
 - Never flash/erase hardware without the applicable exact-target/operator authorization gate.
