@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "product": "Vincent",
-  "bootstrap_repository": "Gordonfive/vincent",
-  "platform_repository": "Gordonfive/vincent",
+  "bootstrap_repository": "logrusbox/vincent",
+  "platform_repository": "logrusbox/vincent",
   "enrollment": {
     "authorization_required": true,
     "private_access_before_authorization": false

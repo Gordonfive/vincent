@@ -34,7 +34,7 @@ Vincent should:
 - update Vincent through a trusted public release channel without requiring routine reimaging;
 - support a generic standalone READY state before any private project or fleet authority is granted;
 - support an operator-selected Git/project source for initial standalone workflows;
-- integrate with Mission Control when explicitly enrolled into a managed fleet;
+- integrate with CIC Station when explicitly enrolled into a managed fleet;
 - use an AI-provider adapter boundary so Codex can be supported first without making the worker architecture permanently vendor-specific;
 - support provider-specific local enrollment/authentication and report non-secret effective identity/health where possible;
 - remain suitable for public/open-source distribution without owner-specific private state embedded in the reusable core.
@@ -43,7 +43,7 @@ Vincent should:
 
 Vincent is not:
 
-- Mission Control or a fleet-wide scheduler/control plane;
+- CIC Station or a fleet-wide scheduler/control plane;
 - a general-purpose remote administration shell;
 - a replacement for SSH/Linux administration when administration is actually required;
 - an autonomous production-deployment authority by default;
@@ -68,13 +68,13 @@ Vincent is not:
 - Debian/toolchain/Vincent maintenance;
 - trusted Vincent software updates;
 - AI-provider adapter installation, enrollment integration, and credential-health checks;
-- the Vincent side of an authenticated Mission Control protocol.
+- the Vincent side of an authenticated CIC Station protocol.
 
-### Mission Control owns
+### CIC Station owns
 
-Mission Control is a separate product for managed fleets. It owns concepts such as enrollment approval/trust, fleet inventory, authorization policy, roles/scopes, assignment dispatch/leasing, liveness, AI identity-profile policy, approvals, fleet reporting, fleet policy, and operator-facing fleet control.
+CIC Station is a separate product for managed fleets. It owns concepts such as enrollment approval/trust, fleet inventory, authorization policy, roles/scopes, assignment dispatch/leasing, liveness, AI identity-profile policy, approvals, fleet reporting, fleet policy, and operator-facing fleet control.
 
-A fresh Vincent worker must not require Mission Control to boot, diagnose itself, maintain itself, update Vincent, or reach an unassigned READY state.
+A fresh Vincent worker must not require CIC Station to boot, diagnose itself, maintain itself, update Vincent, or reach an unassigned READY state.
 
 ### Project repositories own
 

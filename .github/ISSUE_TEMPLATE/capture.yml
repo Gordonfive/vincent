@@ -1,0 +1,19 @@
+name: Quick capture
+description: Record something that must not be forgotten; triage can happen later.
+title: "Capture: "
+body:
+  - type: textarea
+    id: item
+    attributes:
+      label: What should not be forgotten?
+      description: Capture the idea, concern, dependency, or follow-up in plain language.
+      placeholder: Describe it while it is fresh.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Optional links, screenshots, hardware/build details, or why this matters.
+    validations:
+      required: false

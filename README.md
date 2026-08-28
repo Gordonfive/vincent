@@ -6,9 +6,9 @@ The product name is **Vincent**. It is not an acronym. Lowercase `vincent` is us
 
 Vincent provides the Debian-based installer, first-boot/runtime software, local worker services, diagnostics, update mechanisms, Git/project connection, AI-provider adapters, and the execution environment used for bounded development work.
 
-A fresh Vincent installation is independently functional. It can install, boot, diagnose itself, maintain Debian and its toolchain, update Vincent from its trusted public release channel, and reach an unassigned READY state without Mission Control.
+A fresh Vincent installation is independently functional. It can install, boot, diagnose itself, maintain Debian and its toolchain, update Vincent from its trusted public release channel, and reach an unassigned READY state without CIC Station.
 
-Mission Control is a separate optional control-plane product for managed fleets. Project repositories remain authoritative for their own source, requirements, instructions, tests, and durable project artifacts.
+CIC Station is a separate optional control-plane product for managed fleets. Project repositories remain authoritative for their own source, requirements, instructions, tests, and durable project artifacts.
 
 ## Documentation
 
@@ -25,7 +25,7 @@ Start with:
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — development and repository workflow
 - [`SECURITY.md`](SECURITY.md) — security reporting and repository security rules
 
-The overall Vincent + Mission Control program roadmap is owned by the private Mission Control program repository. This repository's roadmap covers Vincent only.
+The overall Vincent + CIC Station program roadmap is owned by `logrusbox/cic-station`. This repository's roadmap covers Vincent only.
 
 ## Repository boundary
 

@@ -55,7 +55,7 @@ Never commit:
 - Wi-Fi passphrases;
 - AI-provider credentials;
 - reusable enrollment/bootstrap secrets;
-- private Mission Control fleet/deployment state;
+- private CIC Station fleet/deployment state;
 - production credentials/data;
 - other sensitive owner/project information.
 

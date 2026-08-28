@@ -10,8 +10,8 @@ import subprocess
 import sys
 import urllib.request
 
-INSTRUCTIONS_URL = "https://raw.githubusercontent.com/Gordonfive/vincent/main/bootstrap/instructions.json"
-EXPECTED_BOOTSTRAP_REPOSITORY = "Gordonfive/vincent"
+INSTRUCTIONS_URL = "https://raw.githubusercontent.com/logrusbox/vincent/main/bootstrap/instructions.json"
+EXPECTED_BOOTSTRAP_REPOSITORY = "logrusbox/vincent"
 ENROLLMENT_REQUEST = Path("/var/lib/vincent/identity/enrollment-request.json")
 AUTHORIZATION = Path("/etc/vincent/authorization.json")
 

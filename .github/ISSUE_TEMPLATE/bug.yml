@@ -1,0 +1,32 @@
+name: Bug
+description: Record a reproducible defect or unexpected behavior.
+title: "Bug: "
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+      description: What happened? Include the exact failure state when practical.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Hardware/build/commit, steps, and frequency if known.
+    validations:
+      required: false
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Non-secret logs, screenshots, CI runs, or related issues.
+    validations:
+      required: false

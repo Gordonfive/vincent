@@ -1,0 +1,32 @@
+name: Work item
+description: Define a bounded feature, change, design task, maintenance item, or verification objective.
+title: "Work: "
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What problem are we solving or outcome are we trying to reach?
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Observable acceptance criteria. Keep this concrete.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies or related work
+      description: Optional issue/PR/ADR/requirement links or blocking relationships.
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Optional implementation constraints, evidence, or context.
+    validations:
+      required: false
