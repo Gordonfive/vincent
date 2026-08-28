@@ -21,8 +21,10 @@ The installer counter also happened to be `0022` at the point of separation, but
 
 Within `Gordonfive/vincent`:
 
-- `/BUILD_NUMBER` is the Vincent runtime/platform build counter and is currently `0022`.
-- `/installer/debian13/BUILD_NUMBER` is the installer build counter and is currently `0022`.
+- `/BUILD_NUMBER` is the independent Vincent runtime/platform build counter.
+- `/installer/debian13/BUILD_NUMBER` is the independent installer build counter.
+
+The value `0022` records the separation point, not a permanently synchronized value. Subsequent changes advance whichever component counters apply.
 
 ## Rationale
 
@@ -30,7 +32,7 @@ Continuing Vincent at 0022 preserves useful implementation provenance rather tha
 
 ## Consequences
 
-- Issue #20 and version/build tooling must treat the two files as separate values even when they currently match.
+- Issue #20 and version/build tooling must treat the two files as separate values even when they happen to match.
 - Tests must not infer one counter from the other.
 - Installer provenance and installed Vincent runtime identity remain separate as required by ADR-0006 and ADR-0015.
 
