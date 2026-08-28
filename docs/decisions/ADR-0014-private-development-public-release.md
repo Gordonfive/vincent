@@ -1,6 +1,6 @@
 # ADR-0014 — Private Development Before Public Release
 
-**Status:** Accepted  
+**Status:** Superseded by ADR-0017  
 **Decision date:** 2026-08-27 (America/Sitka)
 
 ## Context
@@ -22,3 +22,7 @@ Keeping development private allows architecture, naming, installer behavior, and
 - Current private repository state is intentional.
 - Public licensing/release preparation may proceed while the repository remains private.
 - Publication requires an explicit release gate and repository-content review.
+
+## Supersession
+
+ADR-0017 supersedes this decision. Repository visibility is now allowed to be public during development and is treated separately from stable-release readiness.
