@@ -28,6 +28,14 @@ class InstallerTests(unittest.TestCase):
         self.assertIn("import setuptools.build_meta", content)
         self.assertIn("--no-deps --no-build-isolation", content)
 
+    def test_installed_configuration_uses_vincent_state_root(self):
+        install = (ROOT / "installer/install.sh").read_text()
+        config = (ROOT / "config/worker.example.toml").read_text()
+        self.assertIn("state_root=/var/lib/vincent", install)
+        self.assertIn('state_file = "/var/lib/vincent/worker-state.json"', config)
+        self.assertIn('identity_file = "/var/lib/vincent/identity/identity.json"', config)
+        self.assertNotIn('/var/lib/mission-control', config)
+
 
 if __name__ == "__main__":
     unittest.main()
