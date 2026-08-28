@@ -1,6 +1,6 @@
 # Vincent Current Status
 
-**Status date:** 2026-08-27 (America/Sitka)
+**Status date:** 2026-08-28 (America/Sitka)
 
 This file records temporary/current implementation and validation state. It is not a product specification or permanent historical archive.
 
@@ -9,28 +9,39 @@ This file records temporary/current implementation and validation state. It is n
 - `main` is the canonical integration branch and the only permanent branch.
 - The documentation/governance reset was merged through PR #12 at `fb5c8df423be39d80e0effcfe28e688fd7114810`; its validation completed successfully.
 - Installer/ISO implementation from the former ISO workstreams was reconciled onto `main` at `1edbe47a5248ce2a378646decae6ccfaa1c6f1ef` without restoring retired migration/handoff documentation.
-- Accepted independent version/build identity is preserved in ADR-0015: Vincent `0.1.0`, installer `0.1.0`, independent monotonic build counters; the current installer candidate is build `0022`.
-- Earlier standalone AI-provider, documentation-cleanup, and ISO-consolidation branches are superseded by canonical state on `main`.
+- Accepted independent version/build identity is preserved in ADR-0015 as amended by ADR-0018: Vincent `0.1.0` and installer `0.1.0` use independent monotonic build counters whose separation point was `0022`.
+- The current QA-cleanup candidate advances both the Vincent runtime and installer counters to build `0023` because the change affects both components. Equal counter values are coincidental and do not make the counters shared.
+- ADR-0017 supersedes the earlier private-development visibility policy: Vincent may be developed in a public repository before stable release; repository visibility is separate from release readiness.
 
 Branch policy: `main` is the only permanent branch; temporary PR branches are deleted after integration or supersession once useful work is preserved.
 
 ## Current installer/worker development
 
-The reconciled installer candidate includes current implementation for:
+The current installer/runtime implementation includes:
 
 - operator-controlled network and storage/partitioning choices;
 - active installer USB exclusion from target disks;
 - dedicated locked `vincent` runtime service identity;
+- rootless Podman for routine container work without root-equivalent Docker-group membership;
 - unique installer build provenance and ISO/media identity;
 - separate installer provenance versus current Vincent software version/build identity;
 - runtime Ethernet/Wi-Fi resilience and network diagnostics;
 - installer network-preflight evidence for DNS/interception/Debian-source failures;
-- offline installer dependency closure so Debian installation does not depend on an Internet package mirror;
+- offline Debian installer dependency closure so OS installation does not depend on an Internet package mirror;
 - resumable first-boot state for interrupted bootstrap;
 - preserved Codex companion-runtime layout and bubblewrap dependency;
-- local status/diagnostic/console surfaces and non-secret evidence collection.
+- local status/diagnostic/console surfaces and non-secret evidence collection;
+- fresh-install worker state/identity paths aligned under `/var/lib/vincent`.
 
-Worker-internal `mission_control` package/service identifiers remain implementation naming debt tracked in issue #5. Version/build identifiers also still require full runtime/tooling wiring under issue #20.
+Known implementation/design debt is tracked in GitHub rather than hidden in status prose. Important current items include:
+
+- #5 — rename inherited Mission Control identifiers and active control-plane references for the Vincent/CIC Station boundary;
+- #20 — fully wire independent Vincent/installer version and build identifiers through runtime/tooling;
+- #27 — implement the approved offline-first Vincent payload path;
+- #37 — make standalone READY a real first-boot state independent of optional CIC Station enrollment;
+- #38 — introduce the required provider-neutral adapter boundary while retaining Codex as the first implementation;
+- #39 — enforce managed-worker authorization/repository scopes before execution;
+- #47 — bound provider execution with supervisor deadlines/interruption handling.
 
 ## Carried-forward physical-test state
 
@@ -42,15 +53,16 @@ Current verification work:
 - #14 — VINCENT-BUG-0003: transient DNS/bootstrap recovery; open pending current verification.
 - #15 — VINCENT-BUG-0001: resumable first boot; fixed in code, physical verification pending.
 - #16 — VINCENT-BUG-0008: duplicate Wi-Fi SSID suppression; fixed in code, physical verification pending.
-- #17 — VINCENT-BUG-0009: offline installer path on intercepted Wi-Fi; fixed in code, physical verification pending.
+- #17 — VINCENT-BUG-0009: offline Debian installer path on intercepted Wi-Fi; fixed in code, physical verification pending.
 - #18 — VINCENT-BUG-0011: Codex companion runtime; fixed in code, physical verification pending.
+- #28 — rootless Podman privilege boundary; fixed in code, representative physical/workload verification pending.
 - #25 — verified historical fixes for BUG-0004, BUG-0005, BUG-0006, BUG-0007, and BUG-0010; retained as closed regression/provenance evidence.
 
-A historical bug is not assumed to remain present. Each applicable issue is verified against the current reconciled build and then either retained/reopened, closed as verified fixed, or closed as obsolete/superseded with evidence.
+A historical bug is not assumed to remain present. Each applicable issue is verified against the current build and then either retained/reopened, closed as verified fixed, or closed as obsolete/superseded with evidence.
 
 ## Physical development strategy
 
-- **Large workstation:** persistent first useful Vincent worker; keep online for real bounded work and Mission Control development rather than repeatedly reimaging it for routine installer regression testing, except where workstation-specific regression verification is required.
+- **Large workstation:** persistent first useful Vincent worker; keep online for real bounded work and CIC Station development rather than repeatedly reimaging it for routine installer regression testing, except where workstation-specific regression verification is required.
 - **Old laptop:** expendable physical installer test target for repeated clean installations, networking/storage/first-boot changes, and destructive failure-path testing.
 
 Later, after the persistent workstation has performed useful work and required durable state exists elsewhere, deliberately destroy/reinstall its local worker state as the worker-impermanence/recovery acceptance test.
@@ -69,27 +81,33 @@ The documentation cleanup/reorganization gate is complete on `main`:
 - ADRs replace the old mixed decision register;
 - permanent project-start, continuation-handoff, planned-feature, and permanent bug-register documents are retired;
 - GitHub issues are the unscheduled backlog and current bug/verification tracker;
-- Mission Control owns the overall program roadmap; Vincent roadmap is product-specific;
+- CIC Station owns the overall program roadmap; Vincent roadmap is product-specific;
 - migration/reset/prototype reports have been removed from the active tree after distillation;
 - independent SemVer, `CHANGELOG.md`, contribution workflow, PR template, and trunk/squash conventions are established;
 - repository validation checks canonical documents, requirement/ADR IDs, links, release-safety boundaries, historical traceability, and credential patterns;
+- credential scanning includes high-confidence private-key, GitHub, OpenAI, AWS, and Slack credential patterns;
 - active canonical documentation contains no `GitBoy` references.
 
 ## Validation
 
-Documentation-reset validation on PR #12 passed:
+PR #46 QA-cleanup validation on build-0023 candidate source passed:
 
-- 109 unit/integration tests: PASS;
+- 139 unit/integration/regression tests: PASS;
 - credential-pattern scan: PASS;
-- canonical documentation validation: PASS.
+- canonical documentation validation: PASS;
+- Python package build: PASS;
+- GitHub Actions validation runs on Node-24-compatible current action majors.
 
-The reconciled installer implementation passed repository validation before integration at `1edbe47a5248ce2a378646decae6ccfaa1c6f1ef`. Physical validation of installer build `0022` remains pending and must correspond to the exact source retained on `main`.
+The immediately preceding build-0022 ISO path successfully built and passed `INSTALLER_INSPECTION=PASS`; its CI job then failed only because checksum verification changed into `dist/` while the checksum file already contained a `dist/...iso` path. PR #46 corrects that workflow-path defect. End-to-end ISO workflow verification for build 0023 occurs after integration to `main`, because the ISO workflow intentionally runs on `main`/manual dispatch rather than PRs.
 
-## Next technical gate
+Physical validation of installer build `0023` remains pending and must correspond to the exact accepted source retained on `main`.
 
-1. Resolve QA blockers that prevent a fresh installer from completing first boot reliably without depending on re-fetching its bundled Vincent payload.
-2. Build the next Vincent Installer `0.1.0` candidate from the resulting exact accepted `main` commit.
-3. Execute the carried-forward physical regression/verification issues on the laptop and workstation as applicable.
-4. Close, retain, or reclassify each historical bug based on current evidence.
+## Next technical gates
+
+1. Integrate the bounded QA cleanup and prove the build-0023 ISO workflow succeeds from exact `main` source.
+2. Resolve #27 and #37 so the bundled Vincent payload and standalone READY lifecycle no longer require unnecessary GitHub/fleet enrollment dependencies.
+3. Resolve the pre-1.0 runtime architecture/authority blockers, including #38, #39, and #47.
+4. Build the next physical-test candidate from an exact accepted `main` commit and execute the carried-forward laptop/workstation regression issues.
+5. Close, retain, or reclassify each historical bug based on current physical evidence.
 
 Documentation/consolidation status alone does not authorize destructive flashing/reinstallation, production actions, credential expansion, protected releases, or other high-impact operations that retain separate operator gates.

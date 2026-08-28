@@ -30,9 +30,11 @@ Architecture Decision Records (ADRs) are the authoritative record of consequenti
 | [ADR-0011](ADR-0011-ai-provider-adapter-enrollment.md) | Accepted | Provider-neutral adapters; Vincent performs provider-specific local enrollment |
 | [ADR-0012](ADR-0012-generic-worker-baseline.md) | Accepted | Generic worker baseline excludes project-specific tooling |
 | [ADR-0013](ADR-0013-dns-resolver-policy.md) | Accepted | Resolver policy avoids unnecessary dependence on a single provider |
-| [ADR-0014](ADR-0014-private-development-public-release.md) | Accepted | Development remains private until a deliberate public release |
-| [ADR-0015](ADR-0015-versioning-and-build-identifiers.md) | Accepted | Vincent, installer, and Mission Control use independent SemVer and build counters |
+| [ADR-0014](ADR-0014-private-development-public-release.md) | Superseded | Private-development visibility policy; superseded by ADR-0017 |
+| [ADR-0015](ADR-0015-versioning-and-build-identifiers.md) | Accepted, amended | Independent SemVer/build counters; Vincent counter starting point amended by ADR-0018 |
 | [ADR-0016](ADR-0016-rootless-container-runtime.md) | Accepted | Routine worker containers use rootless Podman instead of root-equivalent Docker-group access |
+| [ADR-0017](ADR-0017-public-development-repository.md) | Accepted | Vincent repository may be public during development; visibility is separate from release maturity |
+| [ADR-0018](ADR-0018-vincent-build-counter-lineage.md) | Accepted | Vincent runtime build counter continues at 0022 and diverges independently from installer builds |
 
 ## Migrated legacy decisions
 
