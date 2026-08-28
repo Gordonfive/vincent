@@ -1,6 +1,6 @@
 # ADR-0015 — Independent semantic versions and build identifiers
 
-**Status:** Accepted  
+**Status:** Accepted; Vincent build-counter starting point amended by ADR-0018  
 **Decision date:** 2026-08-27T13:17:00-08:00
 
 ## Context
@@ -48,3 +48,7 @@ This separates release compatibility from exact test/build provenance and preven
 ## Relationship to existing decisions
 
 This refines ADR-0005 and ADR-0006; it does not supersede them.
+
+## Amendment
+
+ADR-0018 supersedes only the statement that the Vincent runtime/platform build counter starts at `0001`. The accepted runtime build lineage starts at `0022`; the independence model in this ADR remains authoritative.
