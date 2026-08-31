@@ -1,6 +1,6 @@
 # Vincent Current Status
 
-**Status date:** 2026-08-28 (America/Sitka)
+**Status date:** 2026-08-31 (America/Sitka)
 
 This file records temporary/current implementation and validation state. It is not a product specification or permanent historical archive.
 
@@ -76,7 +76,7 @@ This is temporary lab strategy, not permanent product architecture.
 
 The documentation cleanup/reorganization gate is complete on `main`:
 
-- Vincent is the product name; no acronym/backronym.
+- Vincent is the component name; no acronym/backronym.
 - MPL-2.0 license is established.
 - conventional `PRODUCT.md` and numbered `REQUIREMENTS.md` are authoritative;
 - all 260 historical specification sections have an explicit disposition in `docs/history/SPECIFICATION_TRACEABILITY_2026-08-27.md`;
@@ -84,7 +84,7 @@ The documentation cleanup/reorganization gate is complete on `main`:
 - ADRs replace the old mixed decision register;
 - permanent project-start, continuation-handoff, planned-feature, and permanent bug-register documents are retired;
 - GitHub issues are the unscheduled backlog and current bug/verification tracker;
-- `logrusbox/vincent-program` owns the overall program roadmap, cross-product integration issues, and program governance; Vincent roadmap is product-specific;
+- `logrusbox/fleet` owns the overall Fleet roadmap, cross-component integration issues, and Fleet governance; Vincent roadmap is component-specific;
 - migration/reset/prototype reports have been removed from the active tree after distillation;
 - independent SemVer, `CHANGELOG.md`, contribution workflow, PR template, and trunk/squash conventions are established;
 - repository validation checks canonical documents, requirement/ADR IDs, links, release-safety boundaries, historical traceability, and credential patterns;
