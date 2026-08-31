@@ -8,12 +8,12 @@ Each document type has one purpose. Do not duplicate the same editable source of
 
 | Document | Purpose |
 |---|---|
-| [`PRODUCT.md`](PRODUCT.md) | Product definition, users, goals, non-goals, principles, and boundaries |
+| [`PRODUCT.md`](PRODUCT.md) | Component definition, users, goals, non-goals, principles, and boundaries |
 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | Stable numbered functional and non-functional requirements |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Current high-level system architecture |
 | [`architecture/`](architecture/) | Detailed component/design documentation |
 | [`decisions/`](decisions/) | Architecture Decision Records (ADRs) and decision index |
-| [`ROADMAP.md`](ROADMAP.md) | Vincent release/product outcomes and sequencing |
+| [`ROADMAP.md`](ROADMAP.md) | Vincent release/component outcomes and sequencing |
 | [`STATUS.md`](STATUS.md) | Current implementation, validation, active blockers, and temporary development state |
 | [`operations/`](operations/) | Supported operational procedures and acceptance runbooks |
 | [`protocols/`](protocols/) | Protocol/schema contracts |
@@ -21,7 +21,7 @@ Each document type has one purpose. Do not duplicate the same editable source of
 
 Repository root documents provide conventional entry points:
 
-- [`../README.md`](../README.md) — product/repository overview
+- [`../README.md`](../README.md) — component/repository overview
 - [`../AGENTS.md`](../AGENTS.md) — coding-agent instructions
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — repository workflow
 - [`../SECURITY.md`](../SECURITY.md) — security policy
@@ -30,7 +30,7 @@ Repository root documents provide conventional entry points:
 ## Authority rules
 
 1. Git on `main` is the durable technical authority for Vincent.
-2. `PRODUCT.md` defines product intent and boundaries.
+2. `PRODUCT.md` defines Vincent component intent and boundaries.
 3. `REQUIREMENTS.md` defines what Vincent must do. Requirement identifiers are permanent once merged.
 4. ADRs record consequential design choices and their rationale. ADR identifiers are immutable once merged.
 5. Architecture documents describe the current design resulting from accepted requirements and ADRs.
@@ -38,11 +38,11 @@ Repository root documents provide conventional entry points:
 7. `STATUS.md` records temporary/current implementation and physical-test state.
 8. GitHub issues are the unscheduled feature/work backlog. Pull requests carry integration/review evidence.
 9. Historical migration/reset material is not an active source of direction. Git history is the archive after useful facts have been distilled.
-10. The private Mission Control program repository owns the overall Vincent + Mission Control program roadmap. Vincent documentation owns the worker product and the Vincent side of the integration boundary only.
+10. `logrusbox/fleet` owns the overall Fleet roadmap, cross-component integration issues, and Fleet governance. Vincent documentation owns the worker component and the Vincent side of the integration boundary only.
 
 ## Documentation lifecycle
 
-- Change product intent deliberately in `PRODUCT.md` and update affected requirements/ADRs.
+- Change component intent deliberately in `PRODUCT.md` and update affected requirements/ADRs.
 - Add or supersede requirements without reusing identifiers.
 - Record consequential architecture choices as ADRs rather than burying decisions in roadmap/status prose.
 - Move scheduled work into the roadmap; keep unscheduled ideas as issues.
