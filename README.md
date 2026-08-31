@@ -1,31 +1,31 @@
 # Vincent
 
-Vincent is a Linux-first platform for turning ordinary computers into reproducible AI development workers.
+Vincent is Fleet's Linux-first managed worker platform for turning ordinary computers into reproducible AI development workers.
 
-The product name is **Vincent**. It is not an acronym. Lowercase `vincent` is used for commands, packages, service identities, paths, configuration keys, and other technical identifiers where lowercase is conventional.
+The component name is **Vincent**. It is not an acronym. Lowercase `vincent` is used for commands, packages, service identities, paths, configuration keys, and other technical identifiers where lowercase is conventional.
 
 Vincent provides the Debian-based installer, first-boot/runtime software, local worker services, diagnostics, update mechanisms, Git/project connection, AI-provider adapters, and the execution environment used for bounded development work.
 
 A fresh Vincent installation is independently functional. It can install, boot, diagnose itself, maintain Debian and its toolchain, update Vincent from its trusted public release channel, and reach an unassigned READY state without CIC Station.
 
-CIC Station is a separate optional control-plane product for managed fleets. Project repositories remain authoritative for their own source, requirements, instructions, tests, and durable project artifacts.
+CIC Station is Fleet's separate optional control plane for managed workers. Project repositories remain authoritative for their own source, requirements, instructions, tests, and durable project artifacts.
 
 ## Documentation
 
 Start with:
 
 - [`docs/README.md`](docs/README.md) — documentation index and authority model
-- [`docs/PRODUCT.md`](docs/PRODUCT.md) — product definition, goals, and boundaries
-- [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) — numbered product requirements
+- [`docs/PRODUCT.md`](docs/PRODUCT.md) — component definition, goals, and boundaries
+- [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) — numbered component requirements
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system architecture
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — Vincent product/release roadmap
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — Vincent component/release roadmap
 - [`docs/STATUS.md`](docs/STATUS.md) — current implementation and test state
 - [`docs/decisions/README.md`](docs/decisions/README.md) — Architecture Decision Record index
 - [`AGENTS.md`](AGENTS.md) — instructions for coding/AI agents working in this repository
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — development and repository workflow
 - [`SECURITY.md`](SECURITY.md) — security reporting and repository security rules
 
-The overall Vincent + CIC Station program roadmap, cross-product integration issues, and program governance are owned by [`logrusbox/vincent-program`](https://github.com/logrusbox/vincent-program). This repository's roadmap covers Vincent only.
+The overall Fleet roadmap, cross-component integration issues, and Fleet governance are owned by [`logrusbox/fleet`](https://github.com/logrusbox/fleet). This repository's roadmap covers Vincent only.
 
 ## Repository boundary
 
